@@ -1,6 +1,6 @@
 # Python Version Manager
 
-PythonVersionManager (PVM for short) is a project that took inspiration from [nvm for windows](https://github.com/coreybutler/nvm-windows) and aims to easily manage multiple python enviroments on your windows system.
+PythonVersionManager (PVM for short) is a project that has been inspired by [nvm for windows](https://github.com/coreybutler/nvm-windows) and aims to easily manage multiple python enviroments on your windows system.
 
 ![](media/pvm.png)
 
@@ -113,6 +113,7 @@ First of all, check if you have all the tools needed to run the software install
 - Python 3.8.x or higher (actually this project has beed written and tested with python 3.11.2)
 - Pip3
 - Git
+- Visual C++ Redist
 
 (Surprisingly no C++ BuildTool is required)
 
