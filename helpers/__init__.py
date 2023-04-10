@@ -10,7 +10,12 @@ from helpers.appPath import (
     getAppRootPath,
     PYTHON_DOWNLOAD_PATH
 )
-from helpers.fetchHtml import fetchHtml
+
+from helpers.fetchData import (
+    fetchHtml,
+    fetchJson
+)
+
 from helpers.PythonVersion import (
     PythonVersion,
     PythonVersions,

@@ -1,4 +1,3 @@
-import copy
 import os
 import platform
 import re
@@ -6,7 +5,6 @@ import shutil
 import subprocess
 import sys
 import httpx
-import bs4
 import pickle
 from datetime import datetime
 import time
@@ -17,6 +15,7 @@ from helpers import (
 	downloadFile,
 	getAppRootPath,
 	getVersionInUse,
+	fetchJson,
 	PYTHON_VERSION_REGEX,
 	PYTHON_DOWNLOAD_PATH
 )
@@ -24,15 +23,16 @@ from helpers import (
 SYMLINK_DEST = f"{os.getenv('LOCALAPPDATA')}\\Python"
 
 class Client:
-	def __init__(self):
+	def __init__(self) -> None:
 		self.appRoot = getAppRootPath()
 
 		self.arch = 'amd64' if platform.architecture()[0] == '64bit' else 'win32'
 		self.client = httpx.Client(timeout=None, follow_redirects=True)
 		self.pythonVersions: PythonVersions = { # type: ignore
-			'names': [],
-			'latest': [],
-			'versions': [],
+			'all': [],
+			'stable': [],
+			'unstable': [],
+			'classes': {},
 			'creationDate': 0
 		}
 
@@ -64,32 +64,33 @@ class Client:
 				return
 
 		# fetch data
-		nugetPackageId = ['python', 'python2'] if self.arch == 'amd64' else ['pythonx86', 'python2x86']
+		nugetPackageId = ['python2', 'python'] if self.arch == 'amd64' else ['python2x86', 'pythonx86']
 
 		for packageID in nugetPackageId:
-			soup = bs4.BeautifulSoup(
-				self.client.get(f'https://www.nuget.org/packages/{packageID}#versions-body-tab').text,
-				features="lxml"
-			)
+			# names: list[str] = fetchJson(client=self.client, url=f'https://api.nuget.org/v3-flatcontainer/{packageID}/index.json')['versions']
+			apiPagination: list[dict] = fetchJson(client=self.client, url=f'https://api.nuget.org/v3/registration5-semver1/{packageID}/index.json')['items']
 
-			tableRows = soup.select('#version-history > table > tbody > tr')
+			for pagination in apiPagination:
+				paginationItems: list[dict] = fetchJson(client=self.client, url=pagination['@id'])['items']
 
-			for tr in tableRows:
-				td = tr.select('td')
-				versionName: str = td[0].find('a')['title'] # type: ignore
-				versionReleaseDate: str = td[2].find('span').text # type: ignore
+				for item in paginationItems:
+					version = item['catalogEntry']['version']
+					packageContent = item['catalogEntry']['packageContent']
+					dt = datetime.fromisoformat(item['catalogEntry']['published'])
 
-				if not re.search(PYTHON_VERSION_REGEX, versionName):
-					continue
+					self.pythonVersions['all'].insert(1, version)
 
-				self.pythonVersions['names'].append(versionName)
-				self.pythonVersions['versions'].append(
-					PythonVersion(
-						version=versionName,
-						majorRelease=int(versionName.split('.')[0]),
-						releaseDate=versionReleaseDate
+					if re.match(PYTHON_VERSION_REGEX, version):
+						self.pythonVersions['stable'].insert(1, version)
+					else:
+						self.pythonVersions['unstable'].insert(1, version)
+
+					self.pythonVersions['classes'][version] = PythonVersion(
+						version=version,
+						majorRelease=int(version.split('.')[0]),
+						releaseDate=f'{dt.month}/{dt.day}/{dt.year}',
+						downloadUrl=packageContent
 					)
-				)
 
 		self.pythonVersions['creationDate'] = int(time.time_ns() / 1000)
 
@@ -106,7 +107,7 @@ class Client:
 		print('Latest python versions:')
 		print('(first 5 for each major version):')
 
-		pv = copy.copy(self.pythonVersions['versions'])
+		pv = list(self.pythonVersions['classes'].values())
 		pv.sort(
 			key=lambda p: datetime.timestamp(datetime.strptime(p.releaseDate,'%m/%d/%Y')),
 			reverse=True
@@ -130,7 +131,7 @@ class Client:
 		print('All python versions:')
 		print('(First 20 of the list)\n')
 
-		for pv in self.pythonVersions['versions'][:20]:
+		for pv in list(self.pythonVersions['classes'].values())[:20]:
 			print(str(pv))
 
 		print('\nThis is a partial list. For a complete list, visit https://www.python.org/downloads/')
@@ -149,11 +150,11 @@ class Client:
 	def installNewVersion(self, version: str) -> None:
 		self.fetchAllAvailableVersions()
 
-		if not version in self.pythonVersions['names'] and version != 'latest':
+		if not version in self.pythonVersions['all'] and version != 'latest':
 			print(f'"{version}" is not a valid python version.')
 			return
 		
-		ver = self.pythonVersions['names'][0] if version == 'latest' else version
+		ver = self.pythonVersions['stable'][0] if version == 'latest' else version
 
 		# set python file naming and architecture
 		arch = 'amd64' if platform.architecture()[0] == '64bit' else 'win32'
@@ -206,7 +207,7 @@ class Client:
 
 	def symlinkDownloadedVersion(self, version: str) -> None:
 		versionPath = os.path.join(PYTHON_DOWNLOAD_PATH, version)
-		if not re.match(string=version, pattern=PYTHON_VERSION_REGEX) or not os.path.exists(versionPath) or not os.path.isdir(versionPath):
+		if not re.match(PYTHON_VERSION_REGEX, version) or not os.path.exists(versionPath) or not os.path.isdir(versionPath):
 			print(f'Python "{version}" is not installed. Try installing it first...')
 			return
 
