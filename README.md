@@ -1,6 +1,6 @@
 # Python Version Manager
 
-PythonVersionManager (PVM for short) is a project that has been inspired by [nvm for windows](https://github.com/coreybutler/nvm-windows) and aims to easily manage multiple python enviroments on your windows system.
+Python Version Manager (PVM for short) is a project that has been inspired by [nvm for windows](https://github.com/coreybutler/nvm-windows) and aims to easily manage multiple python enviroments on your windows system.
 
 ![](media/pvm.png)
 
@@ -24,31 +24,35 @@ PythonVersionManager (PVM for short) is a project that has been inspired by [nvm
 
 # How to use
 
-This is a CLI application, so you need to open a terminal and use it that way.
+This is a CLI application, so you need to open a terminal and use it from there.
 
 ## Install
 
-At the moment is available only a portable version of the app and the installation process is nothing too complex:
+At the moment it is available only as a portable version and the installation process is not too complex:
 
-1. Download the latest version of the app [from here](https://github.com/Relepega/PythonVersionManager/releases).
-2. Unzip the app in a place where you won't move the app folder never again until you uninstall it.
-3. Inside the app folder go to the subfolder `scripts`, right-click on the `install.bat` and then click on `Run as administrator`. If the UAC kicks in, please click on `yes`.
+1. Download the latest version [from here](https://github.com/Relepega/PythonVersionManager/releases).
+2. Unzip the app where you won't move it never again until you uninstall it.
+3. Inside the app folder, go to the subfolder `scripts`, right-click on `install.bat` and then click on `Run as administrator`. If the UAC kicks in, please click on `yes`.
 4. Wait until you don't see any flying terminal and then close the folder.
 5. Restart your terminal.
-6. type `pvm -h` and press enter. If the installation was successful then you will see an output like in [this image](#python-version-manager).
+6. Type `pvm -h` and press enter. If the installation was successful then you will see an output like in [this image](#python-version-manager).
 7. Profit 🎉!
+
+Please keep in mind that you must install the app for each user you want to use it with. 
 
 ## Uninstall
 
 It's basically the same process as the installation one:
 
 1. Open the app folder.
-2. go to the `scripts` subdolder, right-click on the `uninstall.bat` and then click on `Run as administrator`. If the UAC kicks in, please click on `yes`.
+2. Go to the `scripts` subfolder, right-click on `uninstall.bat` and then click on `Run as administrator`. If the UAC kicks in, please click on `yes`.
 3. Wait until you don't see any flying terminal and then close the folder.
 4. Restart your terminal.
-5. type `pvm -h` and press enter. If pvm was uninstalled successfully now in the terminal you should see an error.
+5. Type `pvm -h` and press enter. If pvm was uninstalled successfully now in the terminal you should see an error.
 6. Profit 🎉!
 7. (optional) Please let me know why you decided to uninstall pvm: fill [this form](https://github.com/Relepega/PythonVersionManager/issues/new) and i'll be here to read your struggles with pvm.
+
+Please keep in mind that you must uninstall the app for each user you want to use it with. 
 
 ## Commands
 
@@ -58,7 +62,7 @@ Here's a description of each command:
 
 ### `list` (or the alias `l`)
 
-Displays the user the requested info.
+Displays the requested info to the user.
 
 `$ pvm list latest` lists all the latest python releases.
 
@@ -68,15 +72,15 @@ Displays the user the requested info.
 
 ### `install` (or the alias `i`)
 
-Installs the requested version. If you typed the wrong version nothing will happen.
+Installs the requested version. If you type the wrong version nothing will happen.
 
-`$ pvm install latest` Installs the latest stable python version (now is 3.11.3).
+`$ pvm install latest` Installs the latest stable python version (currently it is 3.11.3).
 
 `$ pvm install 3.11.0` Installs python 3.11.0.
 
 ### `uninstall` (or the alias `u`)
 
-Uninstalls the specified version. If you typed the wrong version nothing will happen.
+Uninstalls the specified version. If you type the wrong version nothing will happen.
 
 `$ pvm uninstall all` Uninstalls ALL the installed python versions. Be careful with this one...
 
@@ -84,7 +88,7 @@ Uninstalls the specified version. If you typed the wrong version nothing will ha
 
 ### `reinstall` (or the alias `r`)
 
-Uninstalls and then installs again the specified version. If you typed the wrong version nothing will happen.
+Uninstalls and then installs the specified version again. If you type the wrong version nothing will happen.
 
 `$ pvm reinstall all` Reinstalls ALL the installed python versions.
 
@@ -94,7 +98,7 @@ Uninstalls and then installs again the specified version. If you typed the wrong
 
 No alias for this one.
 
-If already downloaded, makes active the requested version.
+If already downloaded, it activates the requested version.
 
 `$ pvm use 3.11.0`
 
@@ -110,12 +114,12 @@ Any type of contribution is well accepted, just create a PR and i'll review it a
 
 First of all, check if you have all the tools needed to run the software installed:
 
-- Python 3.8.x or higher (actually this project has beed written and tested with python 3.11.2)
+- Python 3.8.x or higher (actually this project has been written and tested with python 3.11.2)
 - Pip3
 - Git
 - Visual C++ Redist
-
-(Surprisingly no C++ BuildTool is required)
+- Microsoft Visual C++ 14.0 Build Tools
+  - download the installer [from here](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and then install the required tools with this command: `$ vs_buildtools.exe --norestart --passive --downloadThenInstall --includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Workload.MSBuildTools`
 
 When you're sure that you have installed them correctly, proceed by cloning the repository:
 
@@ -136,7 +140,5 @@ or do it manually:
 # FAQ
 
 Q: Why reinvent the wheel when [pyenv-win](https://github.com/pyenv-win/pyenv-win) exists and does the same thing?
-A: Excuse my ignorance, but i didn't know of its existence until the creation of this project.
 
-Q: The application says that the specified version of python was not downloaded, why is it?
-A: The project is still in early developement, so don't expect everything to work as it should 😉.
+A: Forgive my ignorance, but i didn't know of its existence until the creation of this project.

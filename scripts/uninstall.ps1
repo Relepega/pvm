@@ -9,17 +9,20 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 }
 
 $pvm_home = Split-Path $PSScriptRoot -Parent
+$localappdata = [Environment]::GetEnvironmentVariable('localappdata')
+
+$basedir = "$localappdata\Python"
 
 # Items to remove
-$basedir = '%localappdata%\Python'
-$targets = "$basedir\Scripts", "$basedir\", "$pvm_home\"
+$user_targets = "$basedir\Scripts\", "$basedir\"
+$machine_targets = "$pvm_home\"
 
 
-# Get current path
+# Get current path from Machine scope
 $Environment = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
 
 # Remove items
-foreach($target in $targets){
+foreach($target in $user_targets){
 	foreach ($path in ($Environment).Split(";")) {
 		if ($path -like "*$target*") {
 			$Environment = $Environment.Replace($Path ,"")
@@ -27,8 +30,23 @@ foreach($target in $targets){
 	}
 }
 
-# Save updated path
+# Save updated path to Machine scope
 [System.Environment]::SetEnvironmentVariable("Path", $Environment, "Machine")
+
+# Get current path from User scope
+$Environment = [System.Environment]::GetEnvironmentVariable("Path", "User")
+
+# Remove items
+foreach($target in $machine_targets){
+	foreach ($path in ($Environment).Split(";")) {
+		if ($path -like "*$target*") {
+			$Environment = $Environment.Replace($Path ,"")
+		}
+	}
+}
+
+# Save updated path to User scope
+[System.Environment]::SetEnvironmentVariable("Path", $Environment, "User")
 
 New-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python.exe
 New-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe

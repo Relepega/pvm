@@ -1,6 +1,8 @@
 import sys
 from cx_Freeze import setup, Executable # type: ignore
 
+version = '0.1.1'
+
 win_exe = Executable(
 	script='pvm.py',
 	icon=None
@@ -8,19 +10,19 @@ win_exe = Executable(
 
 setup(
 	name="pvm",
-	version="0.1",
+	version=version,
 	description="Python Version Manager",
 	author="Relepega",
-	url='',
-	download_url='',
-	license='',
-	license_files='',
-	project_urls='',
+	url='https://github.com/Relepega/PythonVersionManager',
+	download_url='https://github.com/Relepega/PythonVersionManager/releases',
+	license='GNU GPLv3',
+	license_files='.\\LICENSE',
+	project_urls='https://github.com/Relepega/PythonVersionManager',
 	options={
 		"build_exe": {
 			"optimize": 2,
-			'build_exe': '.\\build\\pvm-win',
-			'include_files': ['scripts'],
+			'build_exe': f'.\\build\\pvm-win-v{version}',
+			'include_files': ['scripts', 'LICENSE'],
 			'include_msvcr': True,
 			'silent_level': 1
 		}

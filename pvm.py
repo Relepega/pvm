@@ -65,7 +65,7 @@ class PVM:
 		listParser = subparsers.add_parser(
 			name='list',
 			aliases='l',
-			help='Displays the user the requested info.',
+			help='Displays the requested info to the user.',
 			usage='%(prog)s [all, latest, installed]'
 		)
 		listParser.add_argument('mode')
@@ -100,7 +100,7 @@ class PVM:
 		
 		useParser = subparsers.add_parser(
 			name='use',
-			help='If already downloaded, makes active the requested version.',
+			help='If already downloaded, activates the requested version.',
 			usage='%(prog)s version_number'
 		)
 		useParser.add_argument('version')
