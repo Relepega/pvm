@@ -1,6 +1,4 @@
 httpx
-beautifulsoup4
-lxml
 rich
 argparse
 cx_Freeze

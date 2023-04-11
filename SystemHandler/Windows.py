@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import sys
+import zipfile
 import httpx
 import pickle
 from datetime import datetime
@@ -16,6 +17,7 @@ from helpers import (
 	getAppRootPath,
 	getVersionInUse,
 	fetchJson,
+	rmPath,
 	PYTHON_VERSION_REGEX,
 	PYTHON_DOWNLOAD_PATH
 )
@@ -27,8 +29,8 @@ class Client:
 		self.appRoot = getAppRootPath()
 
 		self.arch = 'amd64' if platform.architecture()[0] == '64bit' else 'win32'
-		self.client = httpx.Client(timeout=None, follow_redirects=True)
-		self.pythonVersions: PythonVersions = { # type: ignore
+		self.httpClient = httpx.Client(timeout=None, follow_redirects=True)
+		self.pythonVersions: PythonVersions = {
 			'all': [],
 			'stable': [],
 			'unstable': [],
@@ -39,6 +41,27 @@ class Client:
 		self.cachedDataExists = False
 
 
+	def __parsePythonPackages(self, items: list[dict]) -> None:
+		for version in items:
+			versionNumber = version['catalogEntry']['version']
+			packageContent = version['catalogEntry']['packageContent']
+			dt = datetime.fromisoformat(version['catalogEntry']['published']) # ISO 8601 date parsing
+
+			self.pythonVersions['all'].insert(0, versionNumber)
+
+			if re.match(PYTHON_VERSION_REGEX, versionNumber):
+				self.pythonVersions['stable'].insert(0, versionNumber)
+			else:
+				self.pythonVersions['unstable'].insert(0, versionNumber)
+
+			self.pythonVersions['classes'][versionNumber] = PythonVersion(
+				versionNumber=versionNumber,
+				majorRelease=int(versionNumber.split('.')[0]),
+				releaseDate=f'{dt.month}/{dt.day}/{dt.year}',
+				downloadUrl=packageContent
+			)
+
+	
 	def clientInfo(self) -> str:
 		return f'Windows client ({self.arch})'
 
@@ -64,40 +87,25 @@ class Client:
 				return
 
 		# fetch data
-		nugetPackageId = ['python2', 'python'] if self.arch == 'amd64' else ['python2x86', 'pythonx86']
+		nugetPackages = ['python2', 'python'] if self.arch == 'amd64' else ['python2x86', 'pythonx86']
 
-		for packageID in nugetPackageId:
-			# names: list[str] = fetchJson(client=self.client, url=f'https://api.nuget.org/v3-flatcontainer/{packageID}/index.json')['versions']
-			apiPagination: list[dict] = fetchJson(client=self.client, url=f'https://api.nuget.org/v3/registration5-semver1/{packageID}/index.json')['items']
+		for packageID in nugetPackages:
+			url = f'https://api.nuget.org/v3/registration5-semver1/{packageID}/index.json'
+			microsoftInconsistentPaginationElements: list[dict] = fetchJson(client=self.httpClient, url=url)['items']
 
-			for pagination in apiPagination:
-				paginationItems: list[dict] = fetchJson(client=self.client, url=pagination['@id'])['items']
-
-				for item in paginationItems:
-					version = item['catalogEntry']['version']
-					packageContent = item['catalogEntry']['packageContent']
-					dt = datetime.fromisoformat(item['catalogEntry']['published'])
-
-					self.pythonVersions['all'].insert(1, version)
-
-					if re.match(PYTHON_VERSION_REGEX, version):
-						self.pythonVersions['stable'].insert(1, version)
-					else:
-						self.pythonVersions['unstable'].insert(1, version)
-
-					self.pythonVersions['classes'][version] = PythonVersion(
-						version=version,
-						majorRelease=int(version.split('.')[0]),
-						releaseDate=f'{dt.month}/{dt.day}/{dt.year}',
-						downloadUrl=packageContent
-					)
+			if 'python2' in packageID:
+				self.__parsePythonPackages(items=microsoftInconsistentPaginationElements[0]['items']) # type: ignore
+			else:
+				for item in microsoftInconsistentPaginationElements:
+					paginationElements = fetchJson(self.httpClient, item['@id'])
+					self.__parsePythonPackages(items=paginationElements['items'])
 
 		self.pythonVersions['creationDate'] = int(time.time_ns() / 1000)
 
 		# dump data
 		with open(file=cacheFile, mode='wb') as f:
 			pickle.dump(obj=self.pythonVersions, file=f)
-		
+
 		self.cachedDataExists = True
 
 
@@ -107,9 +115,9 @@ class Client:
 		print('Latest python versions:')
 		print('(first 5 for each major version):')
 
-		pv = list(self.pythonVersions['classes'].values())
+		pv = [p for p in self.pythonVersions['classes'].values() if p.stable]
 		pv.sort(
-			key=lambda p: datetime.timestamp(datetime.strptime(p.releaseDate,'%m/%d/%Y')),
+			key=lambda p: datetime.strptime(p.releaseDate, '%m/%d/%Y'),
 			reverse=True
 		)
 
@@ -131,17 +139,28 @@ class Client:
 		print('All python versions:')
 		print('(First 20 of the list)\n')
 
-		for pv in list(self.pythonVersions['classes'].values())[:20]:
+		last20 = list(self.pythonVersions['classes'].values())[-20:]
+		last20.reverse()
+
+		for pv in last20:
 			print(str(pv))
 
 		print('\nThis is a partial list. For a complete list, visit https://www.python.org/downloads/')
 
 
 	def listInstalled(self) -> None:
-		installed = [ f.path.split('\\')[-1] for f in os.scandir(PYTHON_DOWNLOAD_PATH) if f.is_dir() ]		
-		inUse = getVersionInUse()
-		
 		print('Installed python versions:\n')
+
+		if not os.path.exists(PYTHON_DOWNLOAD_PATH):
+			print("No installed version found.")
+			return
+
+		installed = [ f.path.split('\\')[-1] for f in os.scandir(PYTHON_DOWNLOAD_PATH) if f.is_dir() ]
+		inUse = getVersionInUse()
+
+		if len(installed) == 0:
+			print("No installed version found.")
+			return
 
 		for v in installed:
 			print(f"{v}{' (in use)' if v == inUse else ''}")
@@ -158,23 +177,23 @@ class Client:
 
 		# set python file naming and architecture
 		arch = 'amd64' if platform.architecture()[0] == '64bit' else 'win32'
-		filename = f'python-{ver}-embed-{arch}.zip'
-		downloadUrl = f'https://www.python.org/ftp/python/{ver}/{filename}'
+		downloadUrl = self.pythonVersions['classes'][ver].downloadUrl
+		pythonZipFilename = downloadUrl.split('/')[-1] + '.zip'
 
 		# set files path
 		appRootPath = getAppRootPath()
-		offlineZipPath = os.path.join(appRootPath, filename)
+		offlineZipPath = os.path.join(appRootPath, pythonZipFilename)
 		unpackedPythonPath = os.path.join(PYTHON_DOWNLOAD_PATH, ver)
 		getPipScriptPath = os.path.join(appRootPath, 'get-pip.py')
 
-		print(f'Downloading "{filename}" ...')
+		if os.path.exists(unpackedPythonPath):
+			rmPath(unpackedPythonPath)
+
+		print(f'Downloading "{pythonZipFilename}" ...')
 		# download python zip file
 		if not downloadFile(url=downloadUrl, absoluteFilePath=offlineZipPath):
 			print('File not downloaded.')
 			return
-		
-		# unpack python
-		shutil.unpack_archive(offlineZipPath, unpackedPythonPath)
 
 		# download "get-pip.py" if not already downloaded
 		if not os.path.exists(getPipScriptPath):
@@ -182,44 +201,119 @@ class Client:
 			downloadFile(url='https://bootstrap.pypa.io/get-pip.py', absoluteFilePath=getPipScriptPath)
 			print('Done!')
 
+		print("Hacking python's folder :) ...")
+
+		# unpack python
+		shutil.unpack_archive(offlineZipPath, unpackedPythonPath)
+
+		# remove all folders apart 'tools'
+		[rmPath(f.path) for f in os.scandir(unpackedPythonPath) if not 'tools' in f.path] # type: ignore
+
+		# rename 'tools' folder to avoid conflicts in next step
+		shutil.move(os.path.join(unpackedPythonPath, 'tools'), os.path.join(unpackedPythonPath, 'pythonContainer'))
+
+		# move all the 'pythonContainer' subfolders to '{unpackedPythonPath}'
+		[shutil.move(f.path, os.path.join(unpackedPythonPath, f.name)) for f in os.scandir(os.path.join(unpackedPythonPath, 'pythonContainer'))]
+
+		# delete 'pythonContainer'
+		os.removedirs(os.path.join(unpackedPythonPath, 'pythonContainer'))
+
+		# # move site-packages to root
+		# shutil.move(os.path.join(unpackedPythonPath, 'Lib', 'site-packages'), os.path.join(unpackedPythonPath, 'site-packages'))
+
+		# zip all 'Lib' content apart 'site-packages' to 'pythonXXX.zip'
+		zipFilename = 'python' + ''.join(ver.split('.')[:2]) + '.zip'
+
+		with zipfile.ZipFile(os.path.join(unpackedPythonPath, zipFilename), "w") as zf:
+			libRoot = os.path.join(unpackedPythonPath, 'Lib')
+
+			for dirname, subdirs, files in os.walk(libRoot):
+				if 'site-packages' in subdirs:
+					subdirs.remove('site-packages')
+				
+				relativeDirname = dirname.replace(libRoot, '')
+
+				if not relativeDirname == '':
+					zf.write(dirname, arcname=relativeDirname)
+				
+				for filename in files:
+					absPathFilename = os.path.join(dirname, filename)
+					zf.write(absPathFilename, arcname=absPathFilename.replace(libRoot, ''))
+
+		# remove all directories from 'Lib' apart 'site-packages'
+		[rmPath(f.path) for f in os.scandir(os.path.join(unpackedPythonPath, 'Lib')) if not 'site-packages' in f.path] # type: ignore
+
+		# move all the 'DLLs' files to '{unpackedPythonPath}'
+		[shutil.move(f.path, os.path.join(unpackedPythonPath, f.name)) for f in os.scandir(os.path.join(unpackedPythonPath, 'DLLs'))]
+
+		# delete 'DLLs' directory
+		os.removedirs(os.path.join(unpackedPythonPath, 'DLLs'))
+
 		# fix site-packages (https://stackoverflow.com/a/68891090)
 		with open(file=os.path.join(unpackedPythonPath, f"python{''.join(ver.split('.')[:2])}._pth"), mode='a', encoding='utf-8') as f:
-			f.write(r"Lib\site-packages")
+			f.writelines([
+				zipFilename + '\n',
+				'.\n',
+				'\n',
+				'# Uncomment to run site.main() automatically\n',
+				'#import site\n',
+				'\n',
+				r"Lib\site-packages"
+			])
+
+		print('Done!')
 
 		# install pip into fresh python download
-		print('Installing "pip" package...')
+		print('Installing "pip" package ...')
 
-		p = subprocess.check_output(
-			[os.path.join(unpackedPythonPath, "python.exe"), getPipScriptPath],
-			shell=True,
-			stderr=subprocess.DEVNULL
-		)
+		try:
+			p = subprocess.check_output(
+				[os.path.join(unpackedPythonPath, "python.exe"), getPipScriptPath],
+				shell=True,
+				stderr=subprocess.STDOUT
+				# stderr=subprocess.DEVNULL
+			)
+		except Exception:
+			pass
+
+		print('Done!')
 
 		# remove python zip
-		os.remove(filename)
+		os.remove(offlineZipPath)
 
 		# set symlink
-		self.symlinkDownloadedVersion(ver)
+		if self.symlinkDownloadedVersion(ver):
+			print(f'Python {ver} installed successfully!')
 
-		print(f'Python {ver} installed successfully!')
 		print('-----------------------------------------------')
 
 
-	def symlinkDownloadedVersion(self, version: str) -> None:
+	def symlinkDownloadedVersion(self, version: str) -> bool:
 		versionPath = os.path.join(PYTHON_DOWNLOAD_PATH, version)
-		if not re.match(PYTHON_VERSION_REGEX, version) or not os.path.exists(versionPath) or not os.path.isdir(versionPath):
+		if not os.path.exists(versionPath) or not os.path.isdir(versionPath):
 			print(f'Python "{version}" is not installed. Try installing it first...')
-			return
+			return False
 
 		command = f"New-Item -Force -ItemType SymbolicLink -Path '{SYMLINK_DEST}' -Target '{versionPath}'"
-		p = subprocess.Popen(
-			[
-				"powershell.exe", 
-				"-noprofile", "-c",
-				f"""
-				Start-Process -WindowStyle hidden -Verb RunAs -Wait powershell.exe -Args "{command}"
-				"""
-			],
-			stdout=sys.stdout
-		)
-		p.communicate()
+
+		print('Making symlink ...')
+		
+		try:
+			p = subprocess.Popen(
+				[
+					"powershell.exe", 
+					"-noprofile", "-c",
+					f"""
+					Start-Process -WindowStyle hidden -Verb RunAs -Wait powershell.exe -Args "{command}"
+					"""
+				],
+				stdout=sys.stdout
+			)
+			p.communicate()
+		except Exception:
+			print("Couldn't create the symlink, exiting ...")
+			return False
+
+		print('Done!')
+
+		return True

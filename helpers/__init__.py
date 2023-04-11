@@ -6,13 +6,14 @@ from helpers.getLatest import (
 from helpers.download import downloadFile
 
 from helpers.removeDuplicates import removeDuplicatesFromList
-from helpers.appPath import (
+from helpers.FS import (
     getAppRootPath,
+    rmPath,
     PYTHON_DOWNLOAD_PATH
 )
 
 from helpers.fetchData import (
-    fetchHtml,
+    # fetchHtml,
     fetchJson
 )
 

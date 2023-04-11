@@ -5,7 +5,7 @@ import httpx
 import rich.progress
 from sys import exit
 
-from .appPath import (
+from .FS import (
 	getAppRootPath
 )
 
