@@ -173,23 +173,26 @@ class Client:
 			print(f'"{version}" is not a valid python version.')
 			return
 		
-		ver = self.pythonVersions['stable'][0] if version == 'latest' else version
+		pythonVersion = self.pythonVersions['classes'][self.pythonVersions['stable'][0]] if version == 'latest' else self.pythonVersions['classes'][version]
 
 		# set python file naming and architecture
 		arch = 'amd64' if platform.architecture()[0] == '64bit' else 'win32'
-		downloadUrl = self.pythonVersions['classes'][ver].downloadUrl
-		pythonZipFilename = downloadUrl.split('/')[-1] + '.zip'
+		downloadUrl = pythonVersion.downloadUrl
 
 		# set files path
 		appRootPath = getAppRootPath()
-		offlineZipPath = os.path.join(appRootPath, pythonZipFilename)
-		unpackedPythonPath = os.path.join(PYTHON_DOWNLOAD_PATH, ver)
-		getPipScriptPath = os.path.join(appRootPath, 'get-pip.py')
+		offlineZipPath = os.path.join(appRootPath, pythonVersion.filename)
+		unpackedPythonPath = os.path.join(PYTHON_DOWNLOAD_PATH, pythonVersion.versionNumber)
+		getPipScriptRootPath = os.path.join(appRootPath, 'get-pip')
+		getPipScriptPath = os.path.join(getPipScriptRootPath, pythonVersion.pipVersion['filename'])
 
 		if os.path.exists(unpackedPythonPath):
 			rmPath(unpackedPythonPath)
 
-		print(f'Downloading "{pythonZipFilename}" ...')
+		if not os.path.exists(getPipScriptRootPath):
+			os.makedirs(getPipScriptRootPath)
+
+		print(f'Downloading "{pythonVersion.filename}" ...')
 		# download python zip file
 		if not downloadFile(url=downloadUrl, absoluteFilePath=offlineZipPath):
 			print('File not downloaded.')
@@ -197,7 +200,7 @@ class Client:
 
 		# download "get-pip.py" if not already downloaded
 		if not os.path.exists(getPipScriptPath):
-			print('Downloading newest "get-pip.py" ...')
+			print(f'Downloading "get-pip.py" from "{pythonVersion.pipVersion["downloadUrl"]}" ...')
 			downloadFile(url='https://bootstrap.pypa.io/get-pip.py', absoluteFilePath=getPipScriptPath)
 			print('Done!')
 
@@ -218,11 +221,8 @@ class Client:
 		# delete 'pythonContainer'
 		os.removedirs(os.path.join(unpackedPythonPath, 'pythonContainer'))
 
-		# # move site-packages to root
-		# shutil.move(os.path.join(unpackedPythonPath, 'Lib', 'site-packages'), os.path.join(unpackedPythonPath, 'site-packages'))
-
 		# zip all 'Lib' content apart 'site-packages' to 'pythonXXX.zip'
-		zipFilename = 'python' + ''.join(ver.split('.')[:2]) + '.zip'
+		zipFilename = 'python' + ''.join(pythonVersion.versionNumber.split('.')[:2]) + '.zip'
 
 		with zipfile.ZipFile(os.path.join(unpackedPythonPath, zipFilename), "w") as zf:
 			libRoot = os.path.join(unpackedPythonPath, 'Lib')
@@ -250,7 +250,7 @@ class Client:
 		os.removedirs(os.path.join(unpackedPythonPath, 'DLLs'))
 
 		# fix site-packages (https://stackoverflow.com/a/68891090)
-		with open(file=os.path.join(unpackedPythonPath, f"python{''.join(ver.split('.')[:2])}._pth"), mode='a', encoding='utf-8') as f:
+		with open(file=os.path.join(unpackedPythonPath, f"python{''.join(pythonVersion.versionNumber.split('.')[:2])}._pth"), mode='a', encoding='utf-8') as f:
 			f.writelines([
 				zipFilename + '\n',
 				'.\n',
@@ -282,8 +282,8 @@ class Client:
 		os.remove(offlineZipPath)
 
 		# set symlink
-		if self.symlinkDownloadedVersion(ver):
-			print(f'Python {ver} installed successfully!')
+		if self.symlinkDownloadedVersion(pythonVersion.versionNumber):
+			print(f'Python {pythonVersion.versionNumber} installed successfully!')
 
 		print('-----------------------------------------------')
 

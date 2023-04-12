@@ -134,3 +134,6 @@ cache_*
 
 # Python download folder
 Python/**
+
+# Pip download folder
+get-pip/**
