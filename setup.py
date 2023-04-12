@@ -1,7 +1,7 @@
 import sys
 from cx_Freeze import setup, Executable # type: ignore
 
-version = '0.1.1'
+version = '1.0.0-beta1'
 
 win_exe = Executable(
 	script='pvm.py',
@@ -21,7 +21,7 @@ setup(
 	options={
 		"build_exe": {
 			"optimize": 2,
-			'build_exe': f'.\\build\\pvm-win-v{version}',
+			'build_exe': f'.\\build\\pvm-win',
 			'include_files': ['scripts', 'LICENSE'],
 			'include_msvcr': True,
 			'silent_level': 1

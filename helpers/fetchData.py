@@ -1,3 +1,4 @@
+import sys
 import httpx
 # import bs4
 
@@ -6,5 +7,10 @@ import httpx
 # 	return bs4.BeautifulSoup(res.text, features="lxml")
 
 def fetchJson(client: httpx.Client, url: str) -> dict:
-	res = client.get(url)
-	return res.json()
+	try:
+		res = client.get(url)
+		return res.json()
+	except httpx.HTTPError:
+		print(f"No internet connection available, exiting...")
+		sys.exit()
+	

@@ -29,7 +29,10 @@ class Client:
 		self.appRoot = getAppRootPath()
 
 		self.arch = 'amd64' if platform.architecture()[0] == '64bit' else 'win32'
-		self.httpClient = httpx.Client(timeout=None, follow_redirects=True)
+		self.httpClient = httpx.Client(
+			timeout=httpx.Timeout(10.0, connect=60.0), # A client with a 60s timeout for connecting, and a 10s timeout elsewhere.
+			follow_redirects=True
+		)
 		self.pythonVersions: PythonVersions = {
 			'all': [],
 			'stable': [],
@@ -194,14 +197,14 @@ class Client:
 
 		print(f'Downloading "{pythonVersion.filename}" ...')
 		# download python zip file
-		if not downloadFile(url=downloadUrl, absoluteFilePath=offlineZipPath):
+		if not downloadFile(url=downloadUrl, absoluteFilePath=offlineZipPath, client=self.httpClient):
 			print('File not downloaded.')
 			return
 
 		# download "get-pip.py" if not already downloaded
 		if not os.path.exists(getPipScriptPath):
 			print(f'Downloading "get-pip.py" from "{pythonVersion.pipVersion["downloadUrl"]}" ...')
-			downloadFile(url='https://bootstrap.pypa.io/get-pip.py', absoluteFilePath=getPipScriptPath)
+			downloadFile(url='https://bootstrap.pypa.io/get-pip.py', absoluteFilePath=getPipScriptPath, client=self.httpClient)
 			print('Done!')
 
 		print("Hacking python's folder :) ...")
@@ -284,6 +287,8 @@ class Client:
 		# set symlink
 		if self.symlinkDownloadedVersion(pythonVersion.versionNumber):
 			print(f'Python {pythonVersion.versionNumber} installed successfully!')
+		else:
+			print(f"Error creating the symlink. Python {pythonVersion.versionNumber} wasn't set as active version.")
 
 		print('-----------------------------------------------')
 
@@ -310,10 +315,10 @@ class Client:
 				stdout=sys.stdout
 			)
 			p.communicate()
+
+			print('Done!')
+
+			return True if p.returncode == 0 else False
 		except Exception:
 			print("Couldn't create the symlink, exiting ...")
 			return False
-
-		print('Done!')
-
-		return True
