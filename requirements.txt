@@ -2,3 +2,4 @@ httpx
 rich
 argparse
 cx_Freeze
+mypy

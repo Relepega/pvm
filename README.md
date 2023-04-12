@@ -2,6 +2,8 @@
 
 Python Version Manager (PVM for short) is a project that has been inspired by [nvm for windows](https://github.com/coreybutler/nvm-windows) and aims to easily manage multiple python enviroments on your windows system.
 
+:warning: WARNING: Please be aware that only python >= 3.6.0 *flawlessly* works with this method.
+
 ![](media/pvm.png)
 
 # Table of contents
