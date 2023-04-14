@@ -16,7 +16,11 @@ def getAppRootPath() -> str:
 PYTHON_DOWNLOAD_PATH = os.path.join(getAppRootPath(), 'Python')
 
 def rmPath(path: str) -> None:
-	if os.path.isdir(path):
-		shutil.rmtree(path)
-	else:
-		os.remove(path)
+	try:
+		if os.path.isdir(path):
+			shutil.rmtree(path)
+		else:
+			os.remove(path)
+	except Exception:
+		print("Couldn't delete the file/folder. Exiting...")
+		sys.exit()

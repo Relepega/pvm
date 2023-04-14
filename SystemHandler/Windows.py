@@ -1,14 +1,15 @@
 import os
 import platform
-import re
 import shutil
 import subprocess
 import sys
+from typing import Callable
 import zipfile
 import httpx
 import pickle
 from datetime import datetime
 import time
+from packaging.version import Version
 from rich import print
 from helpers import (
 	PythonVersion,
@@ -18,15 +19,15 @@ from helpers import (
 	getVersionInUse,
 	fetchJson,
 	rmPath,
-	PYTHON_VERSION_REGEX,
 	PYTHON_DOWNLOAD_PATH
 )
 
 SYMLINK_DEST = f"{os.getenv('LOCALAPPDATA')}\\Python"
 
 class Client:
-	def __init__(self) -> None:
+	def __init__(self, checkIfValidPythonVersion: Callable) -> None:
 		self.appRoot = getAppRootPath()
+		self.__checkIfValidPythonVersion = checkIfValidPythonVersion
 
 		self.arch = 'amd64' if platform.architecture()[0] == '64bit' else 'win32'
 		self.httpClient = httpx.Client(
@@ -49,19 +50,25 @@ class Client:
 			versionNumber = version['catalogEntry']['version']
 			packageContent = version['catalogEntry']['packageContent']
 			dt = datetime.fromisoformat(version['catalogEntry']['published']) # ISO 8601 date parsing
+			
+			pv: Version = self.__checkIfValidPythonVersion(versionNumber)
 
 			self.pythonVersions['all'].insert(0, versionNumber)
 
-			if re.match(PYTHON_VERSION_REGEX, versionNumber):
-				self.pythonVersions['stable'].insert(0, versionNumber)
-			else:
+			if pv.is_prerelease:
 				self.pythonVersions['unstable'].insert(0, versionNumber)
+			else:
+				self.pythonVersions['stable'].insert(0, versionNumber)
+
+			vnNoDash = versionNumber.replace('-', '')
+			installerFilename = packageContent.split('/')[-1] + '.zip' if pv.major >= 3 else f"python-{vnNoDash}{'.amd64' if self.arch == '64bit' else ''}.msi"
+			downloadUrl = packageContent if pv.major >= 3 else f"https://www.python.org/ftp/python/{pv.base_version}/{installerFilename}"
 
 			self.pythonVersions['classes'][versionNumber] = PythonVersion(
 				versionNumber=versionNumber,
-				majorRelease=int(versionNumber.split('.')[0]),
 				releaseDate=f'{dt.month}/{dt.day}/{dt.year}',
-				downloadUrl=packageContent
+				downloadUrl=downloadUrl,
+				installerFilename=installerFilename
 			)
 
 	
@@ -118,14 +125,14 @@ class Client:
 		print('Latest python versions:')
 		print('(first 5 for each major version):')
 
-		pv = [p for p in self.pythonVersions['classes'].values() if p.stable]
+		pv = [p for p in self.pythonVersions['classes'].values() if p.isStable]
 		pv.sort(
 			key=lambda p: datetime.strptime(p.releaseDate, '%m/%d/%Y'),
 			reverse=True
 		)
 
-		python3 = [p for p in pv if p.majorRelease == 3][: 5]
-		python2 = [p for p in pv if p.majorRelease == 2][: 5]
+		python3 = [p for p in pv if p.versionInfo.major == 3][: 5]
+		python2 = [p for p in pv if p.versionInfo.major == 2][: 5]
 
 		for p in python3:
 			print(str(p))
@@ -142,13 +149,14 @@ class Client:
 		print('All python versions:')
 		print('(First 20 of the list)\n')
 
-		last20 = list(self.pythonVersions['classes'].values())[-20:]
+		# last20 = list(self.pythonVersions['classes'].values())[-20:]
+		last20 = list(self.pythonVersions['classes'].values())
 		last20.reverse()
 
 		for pv in last20:
 			print(str(pv))
 
-		print('\nThis is a partial list. For a complete list, visit https://www.python.org/downloads/')
+		# print('\nThis is a partial list. For a complete list, visit https://www.python.org/downloads/')
 
 
 	def listInstalled(self) -> None:
@@ -166,7 +174,7 @@ class Client:
 			return
 
 		for v in installed:
-			print(f"{v}{' (in use)' if v == inUse else ''}")
+			print(f"{v}{' (in use)' if v in inUse else ''}")
 
 
 	def installNewVersion(self, version: str) -> None:
@@ -178,34 +186,80 @@ class Client:
 		
 		pythonVersion = self.pythonVersions['classes'][self.pythonVersions['stable'][0]] if version == 'latest' else self.pythonVersions['classes'][version]
 
-		# set python file naming and architecture
-		arch = 'amd64' if platform.architecture()[0] == '64bit' else 'win32'
-		downloadUrl = pythonVersion.downloadUrl
-
-		# set files path
-		appRootPath = getAppRootPath()
-		offlineZipPath = os.path.join(appRootPath, pythonVersion.filename)
+		# set system paths
 		unpackedPythonPath = os.path.join(PYTHON_DOWNLOAD_PATH, pythonVersion.versionNumber)
-		getPipScriptRootPath = os.path.join(appRootPath, 'get-pip')
-		getPipScriptPath = os.path.join(getPipScriptRootPath, pythonVersion.pipVersion['filename'])
+		offlineFilePath = os.path.join(self.appRoot, pythonVersion.installerFilename)
 
 		if os.path.exists(unpackedPythonPath):
 			rmPath(unpackedPythonPath)
 
-		if not os.path.exists(getPipScriptRootPath):
-			os.makedirs(getPipScriptRootPath)
-
-		print(f'Downloading "{pythonVersion.filename}" ...')
-		# download python zip file
-		if not downloadFile(url=downloadUrl, absoluteFilePath=offlineZipPath, client=self.httpClient):
+		# download python zip/installer file
+		print(f'Downloading "{pythonVersion.installerFilename}" ...')
+		if not downloadFile(url=pythonVersion.downloadUrl, absoluteFilePath=offlineFilePath, client=self.httpClient):
 			print('File not downloaded.')
 			return
+		
+		if pythonVersion.versionInfo.major == 2:
+			# unpacking installer using msiexec
+			print("Unpacking installer data...")
 
-		# download "get-pip.py" if not already downloaded
-		if not os.path.exists(getPipScriptPath):
-			print(f'Downloading "get-pip.py" from "{pythonVersion.pipVersion["downloadUrl"]}" ...')
-			downloadFile(url='https://bootstrap.pypa.io/get-pip.py', absoluteFilePath=getPipScriptPath, client=self.httpClient)
+			try:
+				p = subprocess.check_output(
+					f'msiexec /n /a "{offlineFilePath}" /qn TARGETDIR={unpackedPythonPath}',
+					shell=True,
+					stderr=subprocess.STDOUT # "subprocess.DEVNULL" for no output
+				)
+			except Exception:
+				print("Couldn't unpack the requested data. Aborting...")
+
+			print("Done...")
+
+			# move all the 'DLLs' files to '{unpackedPythonPath}'
+			[shutil.move(f.path, os.path.join(unpackedPythonPath, f.name)) for f in os.scandir(os.path.join(unpackedPythonPath, 'DLLs'))]
+
+			# delete 'DLLs' directory
+			os.removedirs(os.path.join(unpackedPythonPath, 'DLLs'))
+
+			# delete installer leftover
+			os.remove(os.path.join(unpackedPythonPath, pythonVersion.installerFilename))
+
+			# install pip into fresh python download
+			print('Installing "pip" package ...')
+			pythonExe = os.path.join(unpackedPythonPath, "python.exe")
+
+			try:
+				p = subprocess.check_output(
+					f'{pythonExe} -m ensurepip --default-pip && {pythonExe} -m pip install --upgrade pip',
+					shell=True,
+					stderr=subprocess.STDOUT # "subprocess.DEVNULL" for no output
+				)
+			except Exception:
+				pass
+
 			print('Done!')
+		else:
+			self.python3Install(
+				pythonVersion=pythonVersion,
+				unpackedPythonPath=unpackedPythonPath,
+				offlineZipPath=offlineFilePath
+			)
+
+		# remove python zip
+		os.remove(offlineFilePath)
+
+		# set symlink
+		if self.symlinkDownloadedVersion(pythonVersion.versionNumber):
+			print(f'Python {pythonVersion.versionNumber} installed successfully!')
+		else:
+			print(f"Error creating the symlink. Python {pythonVersion.versionNumber} wasn't set as active version.")
+
+		print('-----------------------------------------------')
+
+	
+	def python3Install(self, pythonVersion: PythonVersion, unpackedPythonPath: str, offlineZipPath: str) -> None:
+		# set system paths
+		getPipScriptRootPath = os.path.join(unpackedPythonPath, 'Tools')
+		getPipScriptPath = os.path.join(getPipScriptRootPath, pythonVersion.pipVersion['filename'])
 
 		print("Hacking python's folder :) ...")
 
@@ -266,31 +320,26 @@ class Client:
 
 		print('Done!')
 
+		# download "get-pip.py" if not already downloaded
+		if not os.path.exists(getPipScriptPath):
+			print(f'Downloading "get-pip.py" from "{pythonVersion.pipVersion["downloadUrl"]}" ...')
+			print('Done!')
+			downloadFile(url=pythonVersion.pipVersion["downloadUrl"], absoluteFilePath=getPipScriptPath, client=self.httpClient)
+
 		# install pip into fresh python download
 		print('Installing "pip" package ...')
 
 		try:
+			pythonExe = os.path.join(unpackedPythonPath, "python.exe")
 			p = subprocess.check_output(
-				[os.path.join(unpackedPythonPath, "python.exe"), getPipScriptPath],
+				f"{pythonExe} {getPipScriptPath} && {pythonExe} -m pip install --upgrade pip",
 				shell=True,
-				stderr=subprocess.STDOUT
-				# stderr=subprocess.DEVNULL
+				stderr=subprocess.STDOUT # "subprocess.DEVNULL" for no output
 			)
 		except Exception:
 			pass
 
 		print('Done!')
-
-		# remove python zip
-		os.remove(offlineZipPath)
-
-		# set symlink
-		if self.symlinkDownloadedVersion(pythonVersion.versionNumber):
-			print(f'Python {pythonVersion.versionNumber} installed successfully!')
-		else:
-			print(f"Error creating the symlink. Python {pythonVersion.versionNumber} wasn't set as active version.")
-
-		print('-----------------------------------------------')
 
 
 	def symlinkDownloadedVersion(self, version: str) -> bool:

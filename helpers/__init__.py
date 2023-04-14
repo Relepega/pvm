@@ -20,6 +20,5 @@ from helpers.fetchData import (
 from helpers.PythonVersion import (
     PythonVersion,
     PythonVersions,
-    getVersionInUse,
-    PYTHON_VERSION_REGEX
+    getVersionInUse
 )

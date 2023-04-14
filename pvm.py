@@ -1,17 +1,24 @@
 import argparse
 import os
-import re
+from sys import exit
 import shutil
+from typing import Union
+from packaging.version import Version, VERSION_PATTERN
 
 from SystemHandler import Client
-from helpers import (
-	PYTHON_DOWNLOAD_PATH,
-	PYTHON_VERSION_REGEX
-)
+from helpers import PYTHON_DOWNLOAD_PATH
 
 class PVM:
 	def __init__(self) -> None:
-		self.client = Client()
+		self.client = Client(self.__checkIfValidPythonVersion)
+
+	
+	def __checkIfValidPythonVersion(self, version: str) -> Union[Version, None]:
+		try:
+			return Version(version)
+		except:
+			print(f'"{version}" is not a valid version.')
+			exit(0)
 
 
 	def listParserHandler(self, mode: str) -> None:
@@ -26,13 +33,25 @@ class PVM:
 				self.client.listLatest()
 
 	
+	def installNewVersion(self, version: str) -> None:
+		self.__checkIfValidPythonVersion(version)
+
+		versionPath = os.path.join(PYTHON_DOWNLOAD_PATH, version)
+		if os.path.exists(versionPath) and os.path.isdir(versionPath):
+			print(f'Python {version} is already installed. Please use the command "reinstall" instead.')
+		else:
+			self.client.installNewVersion(version)
+
+	
 	def uninstallSingleVersion(self, version: str) -> None:
 		versionPath = os.path.join(PYTHON_DOWNLOAD_PATH, version)
-		if re.match(string=version, pattern=PYTHON_VERSION_REGEX) and os.path.exists(versionPath) and os.path.isdir(versionPath):
+		if os.path.exists(versionPath) and os.path.isdir(versionPath):
 			shutil.rmtree(versionPath)
 
 
 	def uninstallParserHandler(self, version: str) -> None:
+		self.__checkIfValidPythonVersion(version)
+
 		match version.lower():
 			case 'all':
 				if os.path.exists(PYTHON_DOWNLOAD_PATH):
@@ -40,12 +59,14 @@ class PVM:
 			case _:
 				self.uninstallSingleVersion(version)
 
-	
+
 	def reinstallParserHandler(self, version: str) -> None:
+		self.__checkIfValidPythonVersion(version)
+
 		installed = [ f.path.split('\\')[-1] for f in os.scandir(PYTHON_DOWNLOAD_PATH) if f.is_dir() ]
 		reinstall = installed if version.lower() == 'all' else [version]
 
-		if not version in installed and not version.lower() == 'all':
+		if not version in installed or not version.lower() == 'all':
 			print(f'"{version}" is not a valid version or is not currently installed.')
 			return
 
@@ -78,7 +99,7 @@ class PVM:
 			usage='%(prog)s [latest, version_number]'
 		)
 		installParser.add_argument('version')
-		installParser.set_defaults(func=self.client.installNewVersion)
+		installParser.set_defaults(func=self.installNewVersion)
 
 		uninstallParser = subparsers.add_parser(
 			name='uninstall',
