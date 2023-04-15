@@ -1,9 +1,11 @@
 import argparse
 import os
+import re
 from sys import exit
 import shutil
 from typing import Union
 from packaging.version import Version, VERSION_PATTERN
+from rich import print
 
 from SystemHandler import Client
 from helpers import PYTHON_DOWNLOAD_PATH
@@ -12,7 +14,6 @@ class PVM:
 	def __init__(self) -> None:
 		self.client = Client(self.__checkIfValidPythonVersion)
 
-	
 	def __checkIfValidPythonVersion(self, version: str) -> Union[Version, None]:
 		try:
 			return Version(version)
@@ -32,7 +33,7 @@ class PVM:
 			case _:
 				self.client.listLatest()
 
-	
+
 	def installNewVersion(self, version: str) -> None:
 		self.__checkIfValidPythonVersion(version)
 
@@ -61,14 +62,16 @@ class PVM:
 
 
 	def reinstallParserHandler(self, version: str) -> None:
-		self.__checkIfValidPythonVersion(version)
+		if not version.lower() == 'all':
+			self.__checkIfValidPythonVersion(version)
 
 		installed = [ f.path.split('\\')[-1] for f in os.scandir(PYTHON_DOWNLOAD_PATH) if f.is_dir() ]
-		reinstall = installed if version.lower() == 'all' else [version]
 
-		if not version in installed or not version.lower() == 'all':
+		if not version in installed and not version.lower() == 'all':
 			print(f'"{version}" is not a valid version or is not currently installed.')
 			return
+
+		reinstall = installed if version.lower() == 'all' else [version]
 
 		for v in reinstall:
 			self.uninstallSingleVersion(v)

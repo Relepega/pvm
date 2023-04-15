@@ -212,7 +212,6 @@ class Client:
 			except Exception:
 				print("Couldn't unpack the requested data. Aborting...")
 
-			print("Done...")
 
 			# move all the 'DLLs' files to '{unpackedPythonPath}'
 			[shutil.move(f.path, os.path.join(unpackedPythonPath, f.name)) for f in os.scandir(os.path.join(unpackedPythonPath, 'DLLs'))]
@@ -236,7 +235,6 @@ class Client:
 			except Exception:
 				pass
 
-			print('Done!')
 		else:
 			self.python3Install(
 				pythonVersion=pythonVersion,
@@ -318,12 +316,10 @@ class Client:
 				r"Lib\site-packages"
 			])
 
-		print('Done!')
 
 		# download "get-pip.py" if not already downloaded
 		if not os.path.exists(getPipScriptPath):
 			print(f'Downloading "get-pip.py" from "{pythonVersion.pipVersion["downloadUrl"]}" ...')
-			print('Done!')
 			downloadFile(url=pythonVersion.pipVersion["downloadUrl"], absoluteFilePath=getPipScriptPath, client=self.httpClient)
 
 		# install pip into fresh python download
@@ -331,15 +327,21 @@ class Client:
 
 		try:
 			pythonExe = os.path.join(unpackedPythonPath, "python.exe")
+			command = f'"{pythonExe}" {getPipScriptPath} && "{pythonExe}" -m pip install --upgrade pip'
+
+			# fix: https://github.com/pypa/pip/issues/5292
+			if pythonVersion.versionNumber in ['3.5.2', '3.5.2.1', '3.5.2.2', '3.6.0']:
+				command = f'"{pythonExe}" -m easy_install pip easy_install'
+			
+			command += f'"{pythonExe}" -m pip install --upgrade pip'
+
 			p = subprocess.check_output(
-				f"{pythonExe} {getPipScriptPath} && {pythonExe} -m pip install --upgrade pip",
+				command,
 				shell=True,
 				stderr=subprocess.STDOUT # "subprocess.DEVNULL" for no output
 			)
 		except Exception:
 			pass
-
-		print('Done!')
 
 
 	def symlinkDownloadedVersion(self, version: str) -> bool:
@@ -364,8 +366,6 @@ class Client:
 				stdout=sys.stdout
 			)
 			p.communicate()
-
-			print('Done!')
 
 			return True if p.returncode == 0 else False
 		except Exception:
