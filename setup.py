@@ -1,7 +1,7 @@
 import sys
 from cx_Freeze import setup, Executable # type: ignore
 
-version = '1.0.0-beta1'
+version = '1.0.0-beta2'
 
 win_exe = Executable(
 	script='pvm.py',
