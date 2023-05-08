@@ -258,6 +258,7 @@ class Client:
 		# set system paths
 		getPipScriptRootPath = os.path.join(unpackedPythonPath, 'Tools')
 		getPipScriptPath = os.path.join(getPipScriptRootPath, pythonVersion.pipVersion['filename'])
+		python_version_basename = f"python{''.join(pythonVersion.versionNumber.split('.')[:2])}"
 
 		print("Hacking python's folder :) ...")
 
@@ -265,19 +266,22 @@ class Client:
 		shutil.unpack_archive(offlineZipPath, unpackedPythonPath)
 
 		# remove all folders apart 'tools'
-		[rmPath(f.path) for f in os.scandir(unpackedPythonPath) if not 'tools' in f.path] # type: ignore
+		for f in os.scandir(unpackedPythonPath):
+			if not 'tools' in f.path:
+				rmPath(f.path)
 
 		# rename 'tools' folder to avoid conflicts in next step
 		shutil.move(os.path.join(unpackedPythonPath, 'tools'), os.path.join(unpackedPythonPath, 'pythonContainer'))
 
 		# move all the 'pythonContainer' subfolders to '{unpackedPythonPath}'
-		[shutil.move(f.path, os.path.join(unpackedPythonPath, f.name)) for f in os.scandir(os.path.join(unpackedPythonPath, 'pythonContainer'))]
+		for f in os.scandir(os.path.join(unpackedPythonPath, 'pythonContainer')):
+			shutil.move(f.path, os.path.join(unpackedPythonPath, f.name))
 
 		# delete 'pythonContainer'
-		os.removedirs(os.path.join(unpackedPythonPath, 'pythonContainer'))
+		shutil.rmtree(os.path.join(unpackedPythonPath, 'pythonContainer'))
 
 		# zip all 'Lib' content apart 'site-packages' to 'pythonXXX.zip'
-		zipFilename = 'python' + ''.join(pythonVersion.versionNumber.split('.')[:2]) + '.zip'
+		zipFilename = f"{python_version_basename}.zip"
 
 		with zipfile.ZipFile(os.path.join(unpackedPythonPath, zipFilename), "w") as zf:
 			libRoot = os.path.join(unpackedPythonPath, 'Lib')
@@ -296,17 +300,20 @@ class Client:
 					zf.write(absPathFilename, arcname=absPathFilename.replace(libRoot, ''))
 
 		# remove all directories from 'Lib' apart 'site-packages'
-		[rmPath(f.path) for f in os.scandir(os.path.join(unpackedPythonPath, 'Lib')) if not 'site-packages' in f.path] # type: ignore
-
+		for f in os.scandir(os.path.join(unpackedPythonPath, 'Lib')):
+			if 'site-packages' not in f.path:
+				rmPath(f.path)
+	
 		# move all the 'DLLs' files to '{unpackedPythonPath}'
-		[shutil.move(f.path, os.path.join(unpackedPythonPath, f.name)) for f in os.scandir(os.path.join(unpackedPythonPath, 'DLLs'))]
+		for f in os.scandir(os.path.join(unpackedPythonPath, 'DLLs')):
+			shutil.move(f.path, os.path.join(unpackedPythonPath, f.name))
 
 		# delete 'DLLs' directory
 		os.removedirs(os.path.join(unpackedPythonPath, 'DLLs'))
 
 		# fix site-packages (https://stackoverflow.com/a/68891090)
-		with open(file=os.path.join(unpackedPythonPath, f"python{''.join(pythonVersion.versionNumber.split('.')[:2])}._pth"), mode='a', encoding='utf-8') as f:
-			f.writelines([
+		with open(file=os.path.join(unpackedPythonPath, f"{python_version_basename}._pth"), mode='a', encoding='utf-8') as f: # type: ignore
+			f.writelines([  # type: ignore
 				zipFilename + '\n',
 				'.\n',
 				'\n',
@@ -315,7 +322,6 @@ class Client:
 				'\n',
 				r"Lib\site-packages"
 			])
-
 
 		# download "get-pip.py" if not already downloaded
 		if not os.path.exists(getPipScriptPath):
