@@ -14,15 +14,14 @@ $localappdata = [Environment]::GetEnvironmentVariable('localappdata')
 $basedir = "$localappdata\Python"
 
 # Items to remove
-$user_targets = "$basedir\Scripts\", "$basedir\"
-$machine_targets = "$pvm_home\"
+$targets = "$pvm_home\", "$basedir\Scripts\", "$basedir\"
 
 
 # Get current path from Machine scope
 $Environment = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
 
 # Remove items
-foreach($target in $user_targets){
+foreach($target in $targets){
 	foreach ($path in ($Environment).Split(";")) {
 		if ($path -like "*$target*") {
 			$Environment = $Environment.Replace($Path ,"")
@@ -32,21 +31,6 @@ foreach($target in $user_targets){
 
 # Save updated path to Machine scope
 [System.Environment]::SetEnvironmentVariable("Path", $Environment, "Machine")
-
-# Get current path from User scope
-$Environment = [System.Environment]::GetEnvironmentVariable("Path", "User")
-
-# Remove items
-foreach($target in $machine_targets){
-	foreach ($path in ($Environment).Split(";")) {
-		if ($path -like "*$target*") {
-			$Environment = $Environment.Replace($Path ,"")
-		}
-	}
-}
-
-# Save updated path to User scope
-[System.Environment]::SetEnvironmentVariable("Path", $Environment, "User")
 
 New-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python.exe
 New-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe

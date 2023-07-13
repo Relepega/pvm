@@ -1,8 +1,0 @@
-{
-	"python.analysis.typeCheckingMode": "basic",
-	"prettier.useTabs": true,
-	"editor.tabSize": 4,
-	"editor.insertSpaces": false,
-	"python.linting.ignorePatterns": ["**/site-packages/**/*.py", ".vscode/*.py", "Python/**"],
-	"prettier.ignorePath": ".vscode/.prettierignore"
-}

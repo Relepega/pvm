@@ -12,8 +12,7 @@ $localappdata = [Environment]::GetEnvironmentVariable('localappdata')
 $target = "$localappdata\Python"
 $pvm_home = Split-Path $PSScriptRoot -Parent
 
-[Environment]::SetEnvironmentVariable("PATH", $Env:PATH + ";$pvm_home\;", [EnvironmentVariableTarget]::Machine)
-[Environment]::SetEnvironmentVariable("PATH", $Env:PATH + ";$target\;$target\Scripts\;", [EnvironmentVariableTarget]::User)
+[Environment]::SetEnvironmentVariable("PATH", $Env:PATH + ";$pvm_home\;$target\;$target\Scripts\;", [EnvironmentVariableTarget]::Machine) # User
 
 Remove-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python.exe
 Remove-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe
