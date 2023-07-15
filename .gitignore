@@ -1,4 +1,6 @@
-.dccache
 .vscode/
 Python/*
 build/*
+
+.dccache
+cache_*

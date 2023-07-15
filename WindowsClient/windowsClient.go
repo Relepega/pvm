@@ -70,11 +70,10 @@ func (client *Client) clientInfo() string {
 }
 
 func (client *Client) MakeSymlink(version string, srcPath string) bool {
-	// check if path exists and is a directory
 	fileInfo, err := os.Stat(srcPath)
 
 	if err != nil && !fileInfo.IsDir() {
-		log.Fatalf(`Python "%s" is not installed. Try installing it first...`, version)
+		log.Fatalf(`Python %s is not installed. Try installing it first...`, version)
 		return false
 	}
 

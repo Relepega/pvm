@@ -29,9 +29,9 @@ func (client *Client) ListLatest() {
 		return stableVersions[i].ReleaseDateInt >= stableVersions[j].ReleaseDateInt
 	})
 
-	// Filter Python 3 and Python 2 versions
-	python3 := make([]pythonVersion.PythonVersion, 0)
-	python2 := make([]pythonVersion.PythonVersion, 0)
+	// Only latest 5 releases for each major version will be printed
+	python3 := make([]pythonVersion.PythonVersion, 5)
+	python2 := make([]pythonVersion.PythonVersion, 5)
 
 	for _, version := range stableVersions {
 		if version.VersionInfo.Major() == 3 {
@@ -66,7 +66,7 @@ func (client *Client) ListAll() {
 	fmt.Println(" ")
 
 	// limit := 20
-	limit := len(client.PythonVersions.All)
+	limit := len(client.PythonVersions.All) // or 20 if need to be more concise
 
 	for i := 0; i < limit; i++ {
 		current := client.PythonVersions.All[i]

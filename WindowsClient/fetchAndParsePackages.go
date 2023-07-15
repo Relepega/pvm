@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
@@ -107,62 +108,69 @@ func (client *Client) fetchAllAvailableVersions() {
 		nugetPackages = []string{"python2x86", "pythonx86"}
 	}
 
+	var wg sync.WaitGroup
 	for _, packageID := range nugetPackages {
-		url := fmt.Sprintf("https://api.nuget.org/v3/registration5-semver1/%s/index.json", packageID)
-		body := utils.FetchJson(url, client.HttpClient)
+		wg.Add(1)
+		go func(packageID string) {
+			defer wg.Done()
 
-		if strings.Contains(packageID, "python2") {
-			var data pythonVersion.Python2ApiSchema
+			url := fmt.Sprintf("https://api.nuget.org/v3/registration5-semver1/%s/index.json", packageID)
+			body := utils.FetchJson(url, client.HttpClient)
 
-			err := json.Unmarshal(body, &data)
-			if err != nil {
-				log.Fatal(err)
-			}
+			if strings.Contains(packageID, "python2") {
+				var data pythonVersion.Python2ApiSchema
 
-			catalogs := data.Items
-			client.parsePythonPackages(catalogs[0].Items)
-		} else {
-			var data pythonVersion.Python3ApiSchema
-			err := json.Unmarshal(body, &data)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			for _, item := range data.Items {
-				paginationContainer := utils.FetchJson(item.ID, client.HttpClient)
-
-				// var paginationElements map[string]interface{}
-				var paginationElements pythonVersion.Python2CatalogItem
-				err := json.Unmarshal(paginationContainer, &paginationElements)
+				err := json.Unmarshal(body, &data)
 				if err != nil {
 					log.Fatal(err)
 				}
 
-				client.parsePythonPackages(paginationElements.Items)
+				catalogs := data.Items
+				client.parsePythonPackages(catalogs[0].Items)
+			} else {
+				var data pythonVersion.Python3ApiSchema
+				err := json.Unmarshal(body, &data)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				for _, item := range data.Items {
+					paginationContainer := utils.FetchJson(item.ID, client.HttpClient)
+
+					// var paginationElements map[string]interface{}
+					var paginationElements pythonVersion.Python2CatalogItem
+					err := json.Unmarshal(paginationContainer, &paginationElements)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					client.parsePythonPackages(paginationElements.Items)
+				}
 			}
-		}
-
-		client.PythonVersions.CreationDate = time.Now().Unix()
-
-		// create file if not exists
-		file, err := os.OpenFile(cacheFile, os.O_RDONLY|os.O_CREATE, 0666)
-		if err != nil {
-			log.Fatalf("Error creating file: %v", err)
-		}
-		defer file.Close()
-
-		// convert data to []byte
-		encoded, err := msgpack.Marshal(client.PythonVersions)
-		if err != nil {
-			log.Fatalf("Error while encoding data to bytes: %v", err)
-		}
-
-		// write bytes to file
-		_, err = file.Write(encoded)
-		if err != nil {
-			log.Fatalf("Error writing file: %v", err)
-		}
-
-		client.CachedDataExists = true
+		}(packageID)
 	}
+	wg.Wait()
+
+	client.PythonVersions.CreationDate = time.Now().Unix()
+
+	// create file if not exists
+	file, err := os.OpenFile(cacheFile, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Fatalf("Error creating file: %v", err)
+	}
+	defer file.Close()
+
+	// convert data to []byte
+	encoded, err := msgpack.Marshal(client.PythonVersions)
+	if err != nil {
+		log.Fatalf("Error while encoding data to bytes: %v", err)
+	}
+
+	// write bytes to file
+	_, err = file.Write(encoded)
+	if err != nil {
+		log.Fatalf("Error writing file: %v", err)
+	}
+
+	client.CachedDataExists = true
 }

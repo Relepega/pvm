@@ -37,7 +37,6 @@ func (client *Client) InstallNewVersion(v string) {
 		log.Fatalf("\"%s\" is not a valid python version.", v)
 	}
 
-	// set system paths
 	unpackedPythonPath := path.Join(PythonRootContainer, version.VersionNumber)
 	offlineFilePath := path.Join(client.AppRoot, version.InstallerFilename)
 
@@ -48,7 +47,6 @@ func (client *Client) InstallNewVersion(v string) {
 		}
 	}
 
-	// download python zip/installer file
 	fmt.Printf(`Downloading "%s"... `, version.InstallerFilename)
 
 	err := utils.DownloadFile(version.DownloadUrl, offlineFilePath)
@@ -73,7 +71,6 @@ func (client *Client) InstallNewVersion(v string) {
 		log.Fatalln("Python version not installed correctly, try again...")
 	}
 
-	// remove python zip/installer
 	fmt.Print(`Cleaning up... `)
 
 	err = os.Remove(offlineFilePath)
@@ -83,7 +80,6 @@ func (client *Client) InstallNewVersion(v string) {
 
 	fmt.Println("Done!")
 
-	// set symlink
 	client.MakeSymlink(version.VersionNumber, pythonPath)
 
 	fmt.Printf("Python %s installed successfully!\n", version.VersionNumber)
@@ -95,7 +91,6 @@ func (client *Client) python2Install(version pythonVersion.PythonVersion, unpack
 	absOfflineFilePath, _ := filepath.Abs(offlineFilePath)
 	absUnpackedPythonPath, _ := filepath.Abs(unpackedPythonPath)
 
-	// unpack installer using msiexec
 	command := fmt.Sprintf(`msiexec /n /a %s /qn TARGETDIR=%s`, absOfflineFilePath, absUnpackedPythonPath)
 	_, err := utils.RunCmd(command)
 
@@ -133,7 +128,7 @@ func (client *Client) python2Install(version pythonVersion.PythonVersion, unpack
 
 	fmt.Println("Done!")
 
-	// install pip into fresh python download
+	// enable pip functionality
 	fmt.Println(`Installing "pip" package... `)
 
 	pythonExe, _ := filepath.Abs(path.Join(unpackedPythonPath, "python.exe"))
@@ -152,12 +147,11 @@ func (client *Client) python2Install(version pythonVersion.PythonVersion, unpack
 }
 
 func (client *Client) python3Install(version pythonVersion.PythonVersion, unpackedPythonPath string, finalPythonPath string, offlineFilePath string) string {
-	// set system paths
 	pipInstallationScriptFilepath := filepath.Join(finalPythonPath, "Tools", version.PipVersion.Filename)
 	pythonVersionBasename := fmt.Sprintf("python%d%d", version.VersionInfo.Major(), version.VersionInfo.Minor())
 
 	fmt.Print("Sorting files and fixing bugs... ")
-	// unpack python
+
 	utils.UnzipFile(offlineFilePath, unpackedPythonPath)
 
 	// move 'tools' folder outside the temp dir and make it the final one
@@ -227,7 +221,7 @@ func (client *Client) python3Install(version pythonVersion.PythonVersion, unpack
 		utils.DownloadFile(version.PipVersion.DownloadUrl, pipInstallationScriptFilepath)
 	}
 
-	// install pip into fresh python download while fixing https://github.com/pypa/pip/issues/5292
+	// enable pip functionality and fixing the issue https://github.com/pypa/pip/issues/5292
 	fmt.Println("Installing \"pip\" package... ")
 
 	fmt.Print(utils.CmdColors["Orange"])

@@ -20,15 +20,15 @@ func help() {
 	fmt.Println("\nUsage:")
 	fmt.Println(" ")
 	fmt.Println(`  pvm [--]install <version>        : The version can be a specific version or "latest" for the`)
-	fmt.Println(`                                           current latest stable version. Aliased as [-]i.`)
+	fmt.Println(`                                         current latest stable version. Aliased as [-]i.`)
 	fmt.Println(`  pvm [--]reinstall <version>      : The version must be a specific version. Aliased as [-]r.`)
 	fmt.Println(`  pvm [--]uninstall <version>      : The version can either be a specific version or "all" for`)
-	fmt.Println(`                                           uninstalling all the currently installed versions. Aliased as [-]u.`)
+	fmt.Println(`                                         uninstalling all the currently installed versions. Aliased as [-]u.`)
 	fmt.Println("  pvm [--]use <version>            : Switch to use the specified version.")
 	fmt.Println(`  pvm [--]list <mode>              : Type "All" for listing all stable and unstable versions released;`)
-	fmt.Println(`                                           "Installed" for listing all the installed versions`)
-	fmt.Println(`                                           and "latest" for the latest 5 version for each major python`)
-	fmt.Println(`                                           version (python 2, python 3, etc...). Aliased as [-]l.`)
+	fmt.Println(`                                         "Installed" for listing all the installed versions`)
+	fmt.Println(`                                         and "latest" for the latest 5 version for each major python`)
+	fmt.Println(`                                         version (python 2, python 3, etc...). Aliased as [-]l.`)
 	fmt.Println("  pvm on                           : Enable python version management.")
 	fmt.Println("  pvm off                          : Disable python version management.")
 	// fmt.Println("  pvm update                       : Automatically update pvm to the latest version.") // todo
@@ -80,7 +80,11 @@ func pvmOnOff(mode string) {
 		psCmd = fmt.Sprintf(`[Environment]::SetEnvironmentVariable("PATH", $Env:PATH + ";%s;", [EnvironmentVariableTarget]::Machine)`, strings.Join(pathsToCheck, ";"))
 		message = "Python version management is now ENABLED. Restart your PC to complete the process."
 	} else {
-		// create new filtered path string
+		/*
+			create new filtered path string,
+			iterate through all the items
+			and filter out pvm paths and newlines
+		*/
 		var filteredPathElements []string
 
 		for i, s := range pathElements {
@@ -88,7 +92,6 @@ func pvmOnOff(mode string) {
 				continue
 			}
 
-			// trim newlines
 			if i+1 == len(pathElements) {
 				continue
 			}
@@ -101,7 +104,10 @@ func pvmOnOff(mode string) {
 		message = "Python version management is now DISABLED. Restart your PC to complete the process."
 	}
 
-	// Create a temporary file with the command inside
+	/*
+		Create a temporary ps1 script file for disabling symlinks
+		functionality through filtering their path in $PATH machine env var
+	*/
 	file, err := os.CreateTemp("", "pvm_temp-*.ps1")
 	if err != nil {
 		fmt.Println(err)
@@ -109,27 +115,20 @@ func pvmOnOff(mode string) {
 	}
 	defer os.Remove(file.Name())
 
-	// define powershell command and write it to file
 	_, err = file.WriteString(psCmd)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	// Close the file
 	err = file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	// admin command
 	psCmd = `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine; ` + file.Name() + `; Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope LocalMachine`
-
-	// Run PowerShell command as administrator
 	cmd = exec.Command("powershell.exe", "-noprofile", "Start-Process", "-WindowStyle", "hidden", "-Verb", "RunAs", "-Wait", "powershell.exe", `-Args "`+psCmd+`"`)
-
-	// Execute the command
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
@@ -140,6 +139,11 @@ func pvmOnOff(mode string) {
 func main() {
 	args := os.Args
 	windowsClient := WindowsClient.NewClient()
+
+	if len(args) == 1 {
+		fmt.Println("Not enough arguments, please use \"pvm --help\" for more details...")
+		os.Exit(1)
+	}
 
 	if len(args) < 3 {
 		switch args[1] {

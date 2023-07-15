@@ -124,16 +124,15 @@ func UnzipFile(src string, dest string) error {
 		if err != nil {
 			return err
 		}
+		defer outFile.Close()
 
 		rc, err := f.Open()
 		if err != nil {
 			return err
 		}
+		defer rc.Close()
 
 		_, err = io.Copy(outFile, rc)
-
-		outFile.Close()
-		rc.Close()
 
 		if err != nil {
 			return err

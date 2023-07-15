@@ -12,12 +12,15 @@ Python Version Manager (PVM for short) is a project that has been inspired by [n
 	- [Install](#install)
 	- [Uninstall](#uninstall)
 	- [Commands](#commands)
-		- [`list` (or the alias `l`)](#list-or-the-alias-l)
-		- [`install` (or the alias `i`)](#install-or-the-alias-i)
-		- [`uninstall` (or the alias `u`)](#uninstall-or-the-alias-u)
-		- [`reinstall` (or the alias `r`)](#reinstall-or-the-alias-r)
-		- [`use`](#use)
-		- [`--help` (or the alias `-h`)](#--help-or-the-alias--h)
+		- [install](#install-1)
+		- [reinstall](#reinstall)
+		- [uninstall](#uninstall-1)
+		- [use](#use)
+		- [list](#list)
+		- [on](#on)
+		- [off](#off)
+		- [help](#help)
+		- [version](#version)
 - [Developing](#developing)
 	- [Get started](#get-started)
 - [FAQ](#faq)
@@ -56,11 +59,49 @@ Please keep in mind that you must uninstall the app for each user you want to us
 
 ## Commands
 
-The options you can use are: `list`, `install`, `uninstall`, `reinstall`, `use`, `--help`
+Here's a description of each command supported by the application:
 
-Here's a description of each command:
+### install
 
-### `list` (or the alias `l`)
+Installs the requested version. If you type the wrong version nothing will happen.
+
+`$ pvm install latest` Installs the latest stable python version (currently it is 3.11.3).
+
+`$ pvm install 3.11.0` Installs python 3.11.0.
+
+Aliases: `install`, `--install`, `i`, `-i`
+
+### reinstall
+
+Uninstalls and then installs the specified version again. If you type the wrong version nothing will happen.
+
+`$ pvm reinstall all` Reinstalls ALL the installed python versions.
+
+`$ pvm reinstall 3.11.0` Reinstalls python 3.11.0.
+
+Aliases: `reinstall`, `--reinstall`, `r`, `-r`
+
+### uninstall
+
+Uninstalls the specified version. If you type the wrong version nothing will happen.
+
+`$ pvm uninstall all` Uninstalls ALL the installed python versions. Be careful with this one...
+
+`$ pvm uninstall 3.11.0` Unistalls python 3.11.0.
+
+Aliases: `uninstall`, `--uninstall`, `u`, `-u`
+
+### use
+
+No alias for this one.
+
+If already downloaded, it activates the requested version.
+
+`$ pvm use 3.11.0`
+
+Aliases: `use`, `--use`
+
+### list
 
 Displays the requested info to the user.
 
@@ -70,41 +111,27 @@ Displays the requested info to the user.
 
 `$ pvm list installed` lists all the currently installed versions.
 
-### `install` (or the alias `i`)
+Aliases: `list`, `--list`, `l`, `-l`
 
-Installs the requested version. If you type the wrong version nothing will happen.
+### on
 
-`$ pvm install latest` Installs the latest stable python version (currently it is 3.11.3).
+`$ pvm on` Activates managed versions.
 
-`$ pvm install 3.11.0` Installs python 3.11.0.
+### off
 
-### `uninstall` (or the alias `u`)
+`$ pvm off` Deactivates managed versions.
 
-Uninstalls the specified version. If you type the wrong version nothing will happen.
+### help
 
-`$ pvm uninstall all` Uninstalls ALL the installed python versions. Be careful with this one...
+Shows in the console what is written here. You can see it in action in the image [here](#python-version-manager).
 
-`$ pvm uninstall 3.11.0` Unistalls python 3.11.0.
+Aliases: `help`, `--help`, `h`, `-h`
 
-### `reinstall` (or the alias `r`)
+### version
 
-Uninstalls and then installs the specified version again. If you type the wrong version nothing will happen.
+Shows in the console the debug info of the app.
 
-`$ pvm reinstall all` Reinstalls ALL the installed python versions.
-
-`$ pvm reinstall 3.11.0` Reinstalls python 3.11.0.
-
-### `use`
-
-No alias for this one.
-
-If already downloaded, it activates the requested version.
-
-`$ pvm use 3.11.0`
-
-### `--help` (or the alias `-h`)
-
-Basically shows in the console what is written here. You can see it in action in the image [here](#python-version-manager).
+Aliases: `version`, `--version`, `v`, `-v`
 
 # Developing
 
