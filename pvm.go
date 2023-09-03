@@ -145,25 +145,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	if len(args) < 3 {
-		switch args[1] {
-		case "on":
-			pvmOnOff("enable")
-		case "off":
-			pvmOnOff("disable")
-		case "version", "--version", "v", "-v":
-			version(windowsClient)
-		case "help", "--help", "h", "-h":
-			help()
-		default:
-			help()
-		}
+	if len(args) == 4 && args[1] == "install" {
+		println("suca")
+		Parsers.InstallParserHandler(args[2], args[3], windowsClient)
 		return
 	}
 
 	switch args[1] {
 	case "install", "--install", "i", "-i":
-		Parsers.InstallParserHandler(args[2], windowsClient)
+		Parsers.InstallParserHandler(args[2], "", windowsClient)
 	case "reinstall", "--reinstall", "r", "-r":
 		Parsers.ReinstallParserHandler(args[2], windowsClient)
 	case "uninstall", "--uninstall", "u", "-u":
@@ -172,5 +162,16 @@ func main() {
 		Parsers.UseParserHandler(args[2], windowsClient)
 	case "list", "--list", "l", "-l":
 		Parsers.ListParserHandler(args[2], windowsClient)
+	case "on":
+		pvmOnOff("enable")
+	case "off":
+		pvmOnOff("disable")
+	case "help", "--help", "h", "-h":
+		help()
+	case "version", "--version", "v", "-v":
+		version(windowsClient)
+	default:
+		help()
 	}
+
 }

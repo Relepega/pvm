@@ -11,5 +11,5 @@ func ReinstallParserHandler(version string, client *windowsClient.Client) {
 	utils.IsValidPythonVersion(v)
 
 	uninstallSingleVersion(v)
-	InstallParserHandler(v, client)
+	InstallParserHandler(v, "", client)
 }

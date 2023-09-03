@@ -71,6 +71,17 @@ func (client *Client) InstallNewVersion(v string) {
 		log.Fatalln("Python version not installed correctly, try again...")
 	}
 
+	// create "version" file to not mismatch the version with the parent folder name
+	versionFileName := filepath.Join(pythonPath, "version")
+	f, err := os.OpenFile(versionFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeDevice)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer f.Close()
+
+	f.WriteString(version.VersionNumber)
+
 	fmt.Print(`Cleaning up... `)
 
 	err = os.Remove(offlineFilePath)

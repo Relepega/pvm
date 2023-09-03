@@ -3,14 +3,13 @@ package Parsers
 import (
 	utils "Utils"
 	windowsClient "WindowsClient"
-
 	"fmt"
 	"os"
 	"path"
 	"strings"
 )
 
-func InstallParserHandler(version string, client *windowsClient.Client) {
+func InstallParserHandler(version string, alias string, client *windowsClient.Client) {
 	v := strings.ToLower(version)
 
 	if v == "latest" {
@@ -20,7 +19,17 @@ func InstallParserHandler(version string, client *windowsClient.Client) {
 		utils.IsValidPythonVersion(v)
 	}
 
-	versionPath := path.Join(windowsClient.PythonRootContainer, v)
+	var versionPath string
+
+	print(alias)
+
+	if alias != "" {
+		versionPath = path.Join(windowsClient.PythonRootContainer, alias)
+	} else {
+		versionPath = path.Join(windowsClient.PythonRootContainer, v)
+	}
+
+	println(alias)
 
 	// https://stackoverflow.com/a/40624033
 	if stat, err := os.Stat(versionPath); err == nil && stat.IsDir() {
