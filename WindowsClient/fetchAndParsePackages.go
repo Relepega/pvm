@@ -1,8 +1,8 @@
 package windowsClient
 
 import (
+	utils "AppUtils"
 	pythonVersion "PythonVersion"
-	utils "Utils"
 
 	"encoding/json"
 	"fmt"

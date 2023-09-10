@@ -1,4 +1,4 @@
-package Utils
+package AppUtils
 
 import (
 	"archive/zip"
@@ -12,8 +12,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/Masterminds/semver/v3"
 )
 
 func RunCmd(command string) (cmd *exec.Cmd, err error) {
@@ -108,7 +106,7 @@ func UnzipFile(src string, dest string) error {
 		fpath := filepath.Join(dest, f.Name)
 
 		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return fmt.Errorf("%s: illegal file path", fpath)
+			return fmt.Errorf("\"%s\": illegal file path", fpath)
 		}
 
 		if f.FileInfo().IsDir() {
@@ -190,13 +188,4 @@ func ZipDirWithExclusions(inputDir, outputZip string, exclusions []string) error
 	}
 
 	return nil
-}
-
-func IsValidPythonVersion(version string) {
-	_, err := semver.NewVersion(version)
-
-	if err != nil {
-		log.Fatalf(`"%s" is not a valid version.`, version)
-	}
-
 }

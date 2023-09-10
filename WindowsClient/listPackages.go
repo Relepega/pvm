@@ -1,8 +1,8 @@
 package windowsClient
 
 import (
+	appUtils "AppUtils"
 	pythonVersion "PythonVersion"
-	utils "Utils"
 
 	"fmt"
 	"os"
@@ -30,8 +30,8 @@ func (client *Client) ListLatest() {
 	})
 
 	// Only latest 5 releases for each major version will be printed
-	python3 := make([]pythonVersion.PythonVersion, 5)
-	python2 := make([]pythonVersion.PythonVersion, 5)
+	python3 := make([]pythonVersion.PythonVersion, 0)
+	python2 := make([]pythonVersion.PythonVersion, 0)
 
 	for _, version := range stableVersions {
 		if version.VersionInfo.Major() == 3 {
@@ -51,6 +51,7 @@ func (client *Client) ListLatest() {
 	for _, p := range python3 {
 		fmt.Println(p.String())
 	}
+
 	for _, p := range python2 {
 		fmt.Println(p.String())
 	}
@@ -79,7 +80,7 @@ func (client *Client) ListAll() {
 func (client *Client) ListInstalled() {
 	var installed int
 
-	versionInUse := utils.GetPythonVersionInUse()
+	versionInUse := appUtils.GetPythonVersionInUse()
 
 	entries, err := os.ReadDir(PythonRootContainer)
 

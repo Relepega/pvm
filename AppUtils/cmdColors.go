@@ -1,4 +1,4 @@
-package Utils
+package AppUtils
 
 var CmdColors = map[string]string{
 	"Reset":  "\033[0m",

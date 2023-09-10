@@ -1,51 +1,76 @@
 package windowsClient
 
 import (
+	utils "AppUtils"
 	pythonVersion "PythonVersion"
-	utils "Utils"
-	"path"
 
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
 
-func (client *Client) InstallNewVersion(v string) {
-	client.fetchAllAvailableVersions()
+func UseVersion(version string) (*pythonVersion.PythonVersion, error) {
+	client := NewClient()
 
-	var version pythonVersion.PythonVersion
+	ver := strings.ToLower(version)
 
-	inputVersion := strings.ToLower(v)
+	var pv pythonVersion.PythonVersion
 
 	found := false
-	if inputVersion == "latest" {
+
+	if ver == "latest" {
+		length := len(client.PythonVersions.Stable)
+		versionNumber := client.PythonVersions.Stable[length-1]
+		pv = *client.PythonVersions.Classes[versionNumber]
 		found = true
-		latest := client.PythonVersions.Stable[0]
-		version = *client.PythonVersions.Classes[latest]
 	} else {
-		for _, pv := range client.PythonVersions.All {
-			if pv == v {
+		for _, v := range client.PythonVersions.All {
+			if v == version {
 				found = true
-				version = *client.PythonVersions.Classes[inputVersion]
+				pv = *client.PythonVersions.Classes[version]
 			}
 		}
 	}
 
+	client = nil
+
 	if !found {
-		log.Fatalf("\"%s\" is not a valid python version.", v)
+		e := fmt.Errorf("\"%s\" is not a valid python version", version)
+		return nil, e
 	}
+
+	return &pv, nil
+
+}
+
+// func UseAlias(version string, alias string) string {
+// 	if alias != "" {
+// 		return path.Join(PythonRootContainer, alias)
+// 	}
+
+// 	return path.Join(PythonRootContainer, version)
+// }
+
+func (client *Client) InstallNewVersion(version *pythonVersion.PythonVersion, alias string) {
+	client.fetchAllAvailableVersions()
 
 	unpackedPythonPath := path.Join(PythonRootContainer, version.VersionNumber)
 	offlineFilePath := path.Join(client.AppRoot, version.InstallerFilename)
 
-	if _, err := os.Stat(unpackedPythonPath); !os.IsNotExist(err) {
-		err := os.RemoveAll(unpackedPythonPath)
-		if err != nil {
-			log.Fatal(err)
-		}
+	// https://stackoverflow.com/a/40624033
+	if stat, err := os.Stat(unpackedPythonPath); err != nil || stat.IsDir() {
+		fmt.Printf("Python %s is already installed. Please use the command \"reinstall\" instead.", version.VersionNumber)
 	}
+
+	// if _, err := os.Stat(unpackedPythonPath); !os.IsNotExist(err) {
+	// 	err := os.RemoveAll(unpackedPythonPath)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// }
 
 	fmt.Printf(`Downloading "%s"... `, version.InstallerFilename)
 
@@ -71,16 +96,16 @@ func (client *Client) InstallNewVersion(v string) {
 		log.Fatalln("Python version not installed correctly, try again...")
 	}
 
-	// create "version" file to not mismatch the version with the parent folder name
-	versionFileName := filepath.Join(pythonPath, "version")
-	f, err := os.OpenFile(versionFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeDevice)
+	// // create "version" file to not mismatch the version with the parent folder name
+	// versionFileName := filepath.Join(pythonPath, "version")
+	// f, err := os.OpenFile(versionFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeDevice)
 
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer f.Close()
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	// defer f.Close()
 
-	f.WriteString(version.VersionNumber)
+	// f.WriteString(version.VersionNumber)
 
 	fmt.Print(`Cleaning up... `)
 
@@ -96,7 +121,7 @@ func (client *Client) InstallNewVersion(v string) {
 	fmt.Printf("Python %s installed successfully!\n", version.VersionNumber)
 }
 
-func (client *Client) python2Install(version pythonVersion.PythonVersion, unpackedPythonPath string, offlineFilePath string) string {
+func (client *Client) python2Install(version *pythonVersion.PythonVersion, unpackedPythonPath string, offlineFilePath string) string {
 	fmt.Print("Unpacking installer data... ")
 
 	absOfflineFilePath, _ := filepath.Abs(offlineFilePath)
@@ -157,7 +182,7 @@ func (client *Client) python2Install(version pythonVersion.PythonVersion, unpack
 	return absUnpackedPythonPath
 }
 
-func (client *Client) python3Install(version pythonVersion.PythonVersion, unpackedPythonPath string, finalPythonPath string, offlineFilePath string) string {
+func (client *Client) python3Install(version *pythonVersion.PythonVersion, unpackedPythonPath string, finalPythonPath string, offlineFilePath string) string {
 	pipInstallationScriptFilepath := filepath.Join(finalPythonPath, "Tools", version.PipVersion.Filename)
 	pythonVersionBasename := fmt.Sprintf("python%d%d", version.VersionInfo.Major(), version.VersionInfo.Minor())
 

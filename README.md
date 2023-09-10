@@ -139,30 +139,31 @@ Any type of contribution is well accepted, just create a PR and i'll review it a
 
 ## Get started
 
-First of all, check if you have all the tools needed to run the software installed:
+1. Make sure to have these tools installed on your system
 
-- Python 3.8.x or higher (actually this project has been written and tested with python 3.11.2)
-- Pip3
+- Go 1.21.0 (minimum required version)
 - Git
-- Visual C++ Redist
-- Microsoft Visual C++ 14.0 Build Tools
-  - download the installer [from here](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and then install the required tools with this command: `$ vs_buildtools.exe --norestart --passive --downloadThenInstall --includeRecommended --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Workload.MSBuildTools`
 
-When you're sure that you have installed them correctly, proceed by cloning the repository:
+2. When you're sure that you have installed them correctly, proceed by cloning the repository
 
-`git clone https://github.com/Relepega/PythonVersionManager.git`
+`$ git clone https://github.com/Relepega/PythonVersionManager.git`
 
-Once you've cloned the repo, cd into the directory and install the required python packages:
+3. Hop into the project directory
 
-`$ cd PythonVersionManager && pip3 install -r requirements.txt`
+`$ cd pvm`
 
-You're now ready to go!
-If you want to build from source because you don't trust some random guy on the internet, run the build script:
+4. Export the `GO111MODULE` Enviroment Variable to ensure all modules to be installed correctly
+
+- On Linux/MacOS: `$ export GO111MODULE=on`
+- On Windows: `> set GO111MODULE=on`
+
+5. Install the dependencies
+
+`$ go mod download`
+
+6. You're now ready to go! If you want to build from source because you don't trust some random guy on the internet, run the build script:
+
 `build.bat`
-
-or do it manually:
-
-`$ python setup.py build`
 
 # FAQ
 

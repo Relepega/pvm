@@ -1,177 +1,120 @@
 package main
 
 import (
-	"Parsers"
-	"Utils"
-	WindowsClient "WindowsClient"
-
+	utils "AppUtils"
+	windowsClient "WindowsClient"
+	"commands"
 	"fmt"
+
 	"log"
-	"os"
-	"os/exec"
-	"strings"
+
+	"github.com/spf13/cobra"
 )
 
-const PvmVersion = "1.0.0"
-
-func help() {
-	fmt.Println("\nPVM (Python Version Manager) for Windows")
-	fmt.Println("Running version " + PvmVersion + ".")
-	fmt.Println("\nUsage:")
-	fmt.Println(" ")
-	fmt.Println(`  pvm [--]install <version>        : The version can be a specific version or "latest" for the`)
-	fmt.Println(`                                         current latest stable version. Aliased as [-]i.`)
-	fmt.Println(`  pvm [--]reinstall <version>      : The version must be a specific version. Aliased as [-]r.`)
-	fmt.Println(`  pvm [--]uninstall <version>      : The version can either be a specific version or "all" for`)
-	fmt.Println(`                                         uninstalling all the currently installed versions. Aliased as [-]u.`)
-	fmt.Println("  pvm [--]use <version>            : Switch to use the specified version.")
-	fmt.Println(`  pvm [--]list <mode>              : Type "All" for listing all stable and unstable versions released;`)
-	fmt.Println(`                                         "Installed" for listing all the installed versions`)
-	fmt.Println(`                                         and "latest" for the latest 5 version for each major python`)
-	fmt.Println(`                                         version (python 2, python 3, etc...). Aliased as [-]l.`)
-	fmt.Println("  pvm on                           : Enable python version management.")
-	fmt.Println("  pvm off                          : Disable python version management.")
-	// fmt.Println("  pvm update                       : Automatically update pvm to the latest version.") // todo
-	fmt.Println("  pvm [--]help                     : Displays this help message. Aliased as [-]h.")
-	fmt.Println("  pvm [--]version                  : Displays the current running version of pvm for Windows. Aliased as [-]v.")
-	fmt.Println(" ")
-}
-
-func version(client *WindowsClient.Client) {
-	fmt.Println("PVM (Python Version Manager) for Windows")
-	fmt.Println("----------------------------------------")
-	fmt.Println("Version: " + PvmVersion)
-	fmt.Println("Arch:    " + client.Arch)
-	fmt.Println("AppRoot: " + Utils.GetWorkingDir())
-}
-
-func pvmOnOff(mode string) {
-	absSymlinkPath := strings.ReplaceAll(WindowsClient.SymlinkDest, "%localappdata%", os.Getenv("localappdata"))
-
-	// fetch MACHINE-scope PATH enviroment variable and split it
-	cmd := exec.Command("powershell.exe", "-Command", `[System.Environment]::GetEnvironmentVariable("Path", "Machine")`)
-
-	out, err := cmd.Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pathElements := strings.Split(string(out), ";")
-
-	// set psCmd and message based on the case
-	var psCmd string
-	var message string
-
-	if mode == "enable" {
-		pathsToCheck := []string{absSymlinkPath + "\\", absSymlinkPath + "\\Scripts\\"}
-		flags := 0
-
-		// check if symlink is already in path
-		for _, s := range pathElements {
-			if s == pathsToCheck[0] || s == pathsToCheck[1] {
-				flags++
-			}
-
-			if flags == 2 {
-				return
-			}
-		}
-
-		psCmd = fmt.Sprintf(`[Environment]::SetEnvironmentVariable("PATH", $Env:PATH + ";%s;", [EnvironmentVariableTarget]::Machine)`, strings.Join(pathsToCheck, ";"))
-		message = "Python version management is now ENABLED. Restart your PC to complete the process."
-	} else {
-		/*
-			create new filtered path string,
-			iterate through all the items
-			and filter out pvm paths and newlines
-		*/
-		var filteredPathElements []string
-
-		for i, s := range pathElements {
-			if strings.Contains(s, absSymlinkPath) {
-				continue
-			}
-
-			if i+1 == len(pathElements) {
-				continue
-			}
-
-			filteredPathElements = append(filteredPathElements, s)
-		}
-
-		newPath := strings.TrimSpace(strings.Join(filteredPathElements, ";"))
-		psCmd = fmt.Sprintf(`[Environment]::SetEnvironmentVariable("PATH", "%s" , [EnvironmentVariableTarget]::Machine)`, newPath)
-		message = "Python version management is now DISABLED. Restart your PC to complete the process."
-	}
-
-	/*
-		Create a temporary ps1 script file for disabling symlinks
-		functionality through filtering their path in $PATH machine env var
-	*/
-	file, err := os.CreateTemp("", "pvm_temp-*.ps1")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer os.Remove(file.Name())
-
-	_, err = file.WriteString(psCmd)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	err = file.Close()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	psCmd = `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine; ` + file.Name() + `; Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope LocalMachine`
-	cmd = exec.Command("powershell.exe", "-noprofile", "Start-Process", "-WindowStyle", "hidden", "-Verb", "RunAs", "-Wait", "powershell.exe", `-Args "`+psCmd+`"`)
-	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(message)
-}
+const PvmVersion = "0.1.0.a1"
 
 func main() {
-	args := os.Args
-	windowsClient := WindowsClient.NewClient()
-
-	if len(args) == 1 {
-		fmt.Println("Not enough arguments, please use \"pvm --help\" for more details...")
-		os.Exit(1)
+	// TODO: handle aliases
+	cmdInstall := &cobra.Command{
+		Use:     "install <version>",
+		Aliases: []string{"i"},
+		Short:   "Installs the specified python version.",
+		Long:    `Installs the specified python version. If it is not a valid version, the program will exit.`,
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			switch len(args) {
+			case 1:
+				commands.Install(args[0], "")
+			case 2:
+				commands.Install(args[0], args[1])
+			default:
+				log.Fatalln("Too many parameters")
+			}
+		},
 	}
 
-	if len(args) == 4 && args[1] == "install" {
-		println("suca")
-		Parsers.InstallParserHandler(args[2], args[3], windowsClient)
-		return
+	cmdReinstall := &cobra.Command{
+		Use:     "reinstall <version>",
+		Aliases: []string{"r"},
+		Short:   "Reinstalls the specified python version.",
+		Long:    `Reinstalls the specified python version, that can either be a specific version, "all" or an alias. If not found, the program will exit.`,
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			commands.Reinstall(args[0])
+		},
 	}
 
-	switch args[1] {
-	case "install", "--install", "i", "-i":
-		Parsers.InstallParserHandler(args[2], "", windowsClient)
-	case "reinstall", "--reinstall", "r", "-r":
-		Parsers.ReinstallParserHandler(args[2], windowsClient)
-	case "uninstall", "--uninstall", "u", "-u":
-		Parsers.UninstallParserHandler(args[2])
-	case "use", "--use":
-		Parsers.UseParserHandler(args[2], windowsClient)
-	case "list", "--list", "l", "-l":
-		Parsers.ListParserHandler(args[2], windowsClient)
-	case "on":
-		pvmOnOff("enable")
-	case "off":
-		pvmOnOff("disable")
-	case "help", "--help", "h", "-h":
-		help()
-	case "version", "--version", "v", "-v":
-		version(windowsClient)
-	default:
-		help()
+	cmdUninstall := &cobra.Command{
+		Use:     "uninstall <version>",
+		Aliases: []string{"u"},
+		Short:   "Uninstalls the specified python version.",
+		Long:    `Uninstalls the specified python version, that can either be a specific version, "all" or an alias. If not found, the program will exit.`,
+		Args:    cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			commands.Uninstall(args[0])
+		},
 	}
 
+	cmdUse := &cobra.Command{
+		Use:   "use <slug>",
+		Short: "Switch to use the specified alias.",
+		Long:  `Activates the specified python version. It can be either the version number or the installation alias. If not found, the program will exit.`,
+		Args:  cobra.ExactArgs(1),
+		Run:   func(cmd *cobra.Command, args []string) { commands.Use(args[0]) },
+	}
+
+	cmdList := &cobra.Command{
+		Use:     "list <mode>",
+		Aliases: []string{"l"},
+		Short:   "Lists all the mode-specified versions.",
+		Long:    `Lists all the mode-specified versions. Valid modes are "all" (lists stable and unstable versions), "installed", "latest" (lists the latest 5 releases for each major python version). If not a valid mode, the program will exit.`,
+		Args:    cobra.ExactArgs(1),
+		Run:     func(cmd *cobra.Command, args []string) { commands.List(args[0]) },
+	}
+
+	cmdOn := &cobra.Command{
+		Use:   "on",
+		Short: "Enables python version management.",
+		Long:  `Enables python version management by creating a symlink.`,
+		Args:  cobra.ExactArgs(1),
+		Run:   func(cmd *cobra.Command, args []string) { commands.ToggleAppState("enable") },
+	}
+
+	cmdOff := &cobra.Command{
+		Use:   "off",
+		Short: "Disables python version management.",
+		Long:  `Disables python version management by removing the symlink.`,
+		Args:  cobra.ExactArgs(1),
+		Run:   func(cmd *cobra.Command, args []string) { commands.ToggleAppState("disable") },
+	}
+
+	cmdVersion := &cobra.Command{
+		Use:     "version",
+		Aliases: []string{"v"},
+		Short:   "Disables python version management.",
+		Long:    `Disables python version management by removing the symlink.`,
+		Args:    cobra.ExactArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("PVM (Python Version Manager) for Windows")
+			fmt.Println("----------------------------------------")
+			fmt.Println("Version: " + PvmVersion)
+			fmt.Println("Arch:    " + windowsClient.NewClient().Arch)
+			fmt.Println("AppRoot: " + utils.GetWorkingDir())
+		},
+	}
+
+	var rootCmd = &cobra.Command{Use: "pvm"}
+
+	rootCmd.AddCommand(
+		cmdInstall,
+		cmdReinstall,
+		cmdUninstall,
+		cmdUse,
+		cmdList,
+		cmdOn,
+		cmdOff,
+		cmdVersion,
+	)
+
+	rootCmd.Execute()
 }
