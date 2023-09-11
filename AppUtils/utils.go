@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"syscall"
@@ -62,6 +63,21 @@ func GetWorkingDir() string {
 	}
 
 	return appDir
+}
+
+func IsValidFolderName(input string) bool {
+	if input == "" {
+		return false
+	}
+
+	if len(input) < 3 {
+		return false
+	}
+
+	pattern := `^[a-zA-Z0-9_.\s-]{1,255}$`
+	regex, _ := regexp.Compile(pattern)
+
+	return regex.MatchString(input)
 }
 
 func FetchJson(url string, httpClient http.Client) []byte {

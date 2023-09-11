@@ -65,7 +65,7 @@ func NewClient() *Client {
 	}
 }
 
-func (client *Client) clientInfo() string {
+func (client *Client) ClientInfo() string {
 	return fmt.Sprintf("Windows client (%s)", client.Arch)
 }
 

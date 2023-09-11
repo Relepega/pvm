@@ -3,10 +3,10 @@ package main
 import (
 	utils "AppUtils"
 	windowsClient "WindowsClient"
+	"log"
+
 	"commands"
 	"fmt"
-
-	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -94,11 +94,14 @@ func main() {
 		Long:    `Disables python version management by removing the symlink.`,
 		Args:    cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
+			client := windowsClient.NewClient()
+
 			fmt.Println("PVM (Python Version Manager) for Windows")
 			fmt.Println("----------------------------------------")
 			fmt.Println("Version: " + PvmVersion)
 			fmt.Println("Arch:    " + windowsClient.NewClient().Arch)
 			fmt.Println("AppRoot: " + utils.GetWorkingDir())
+			fmt.Println("Client:  " + client.ClientInfo())
 		},
 	}
 
