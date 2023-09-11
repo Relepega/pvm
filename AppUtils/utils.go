@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
+
+	"golang.org/x/sys/windows"
 )
 
 func RunCmd(command string) (cmd *exec.Cmd, err error) {
@@ -34,11 +36,32 @@ func RunCmd(command string) (cmd *exec.Cmd, err error) {
 	return cmd, nil
 }
 
-func GetWorkingDir() string {
-	wd, _ := os.Getwd()
-	absWd, _ := filepath.Abs(path.Dir(wd))
+func getModuleFileName(hModule windows.Handle) (string, error) {
+	var buffer [windows.MAX_PATH]uint16
+	_, err := windows.GetModuleFileName(hModule, &buffer[0], windows.MAX_PATH)
+	if err != nil {
+		return "", err
+	}
+	return syscall.UTF16ToString(buffer[:]), nil
+}
 
-	return absWd
+func GetWorkingDir() string {
+	var appDir string
+
+	if runtime.GOOS == "windows" {
+		// Use syscall to get executable path on Windows
+		exPath, err := getModuleFileName(0)
+		if err != nil {
+			panic(err)
+		}
+		appDir = filepath.Dir(exPath)
+	} else {
+		// Use os.Args on other platforms
+		exPath := os.Args[0]
+		appDir = filepath.Dir(exPath)
+	}
+
+	return appDir
 }
 
 func FetchJson(url string, httpClient http.Client) []byte {
@@ -96,29 +119,44 @@ func DownloadFile(url string, filepath string) error {
 }
 
 func UnzipFile(src string, dest string) error {
-	r, err := zip.OpenReader(src)
+	const filerPrefix string = "tools/"
+
+	stat, err := os.Stat(dest)
+	if err != nil || !stat.IsDir() {
+		os.Mkdir(dest, os.ModeDir)
+	}
+
+	archive, err := zip.OpenReader(src)
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer archive.Close()
 
-	for _, f := range r.File {
-		fpath := filepath.Join(dest, f.Name)
+	for _, f := range archive.File {
+		fp := filepath.Join(dest, f.Name)
 
-		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return fmt.Errorf("\"%s\": illegal file path", fpath)
+		// Zip Slip vuln check
+		if !strings.HasPrefix(fp, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("\"%s\": illegal file path", fp)
 		}
 
-		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
+		// filter unwanted files to be extracted
+		if !strings.HasPrefix(f.Name, filerPrefix) {
 			continue
 		}
 
-		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+		fp = filepath.Join(dest, strings.ReplaceAll(f.Name, filerPrefix, ""))
+
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(fp, os.ModePerm)
+			continue
+		}
+
+		if err = os.MkdirAll(filepath.Dir(fp), os.ModePerm); err != nil {
 			return err
 		}
 
-		outFile, err := os.OpenFile(filepath.Clean(fpath), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+		outFile, err := os.OpenFile(filepath.Clean(fp), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 		if err != nil {
 			return err
 		}

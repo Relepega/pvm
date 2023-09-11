@@ -14,7 +14,7 @@ import (
 )
 
 const SymlinkDest = "%localappdata%\\Python"
-const PythonRootContainer = ".\\Python"
+const PythonRootContainer = "Python"
 
 type PythonVersions struct {
 	All          []string

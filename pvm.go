@@ -20,7 +20,7 @@ func main() {
 		Aliases: []string{"i"},
 		Short:   "Installs the specified python version.",
 		Long:    `Installs the specified python version. If it is not a valid version, the program will exit.`,
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			switch len(args) {
 			case 1:

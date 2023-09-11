@@ -14,5 +14,5 @@ func Install(version string, alias string) {
 		log.Fatalln(err)
 	}
 
-	client.InstallNewVersion(ver, "") // disabling alias by hardcoding
+	client.InstallNewVersion(ver, alias)
 }

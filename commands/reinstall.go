@@ -17,7 +17,6 @@ func Reinstall(version string) {
 	}
 
 	uninstallSingleVersion(ver.VersionNumber)
-	Install(ver.VersionNumber, "")
 
 	client.InstallNewVersion(ver, "") // disabling alias by hardcoding
 }
