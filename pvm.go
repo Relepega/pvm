@@ -14,7 +14,6 @@ import (
 const PvmVersion = "0.1.0.a1"
 
 func main() {
-	// TODO: handle aliases
 	cmdInstall := &cobra.Command{
 		Use:     "install <version>",
 		Aliases: []string{"i"},
@@ -28,7 +27,7 @@ func main() {
 			case 2:
 				commands.Install(args[0], args[1])
 			default:
-				log.Fatalln("Too many parameters")
+				log.Fatalln("Too many parameters. If you're trying to use an alias, please wrap it in double quotes (ex: \"my-custom-alias\").")
 			}
 		},
 	}

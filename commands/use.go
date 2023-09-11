@@ -3,10 +3,9 @@ package commands
 import (
 	windowsClient "WindowsClient"
 	"log"
-	"path/filepath"
-
 	"os"
 	"path"
+	"path/filepath"
 )
 
 /**
@@ -14,21 +13,12 @@ import (
  */
 func Use(slug string) {
 	client := windowsClient.NewClient()
+	installationPath, _ := filepath.Abs(path.Join(client.AppRoot, windowsClient.PythonRootContainer, slug))
+	stat, err := os.Stat(installationPath)
 
-	//! assuming that slug can only be the version number for now
-	version, err := windowsClient.UseVersion(slug)
-
-	if err != nil {
-		log.Fatalln(err)
+	if err != nil || !stat.IsDir() {
+		log.Fatalf("\"%s\" is not a valid installation. Use the 'list' command to list the current installations", slug)
 	}
 
-	// check if path exists and is a directory
-	versionPath, _ := filepath.Abs(path.Join(windowsClient.PythonRootContainer, version.VersionNumber))
-	fileInfo, err := os.Stat(versionPath)
-
-	if err != nil && !fileInfo.IsDir() {
-		os.Exit(1)
-	}
-
-	client.MakeSymlink(version.VersionNumber, versionPath)
+	client.MakeSymlink(slug, installationPath)
 }

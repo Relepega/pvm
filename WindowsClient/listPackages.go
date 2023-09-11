@@ -5,7 +5,9 @@ import (
 	pythonVersion "PythonVersion"
 
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -80,18 +82,24 @@ func (client *Client) ListAll() {
 func (client *Client) ListInstalled() {
 	var installed int
 
+	installationDir := filepath.Join(client.AppRoot, PythonRootContainer)
 	versionInUse := appUtils.GetPythonVersionInUse()
 
-	entries, err := os.ReadDir(PythonRootContainer)
+	entries, err := os.ReadDir(installationDir)
 
 	for _, entry := range entries {
 		if entry.IsDir() {
-			fname := entry.Name()
+			dirname := entry.Name()
 
-			if strings.Contains(versionInUse, fname) {
-				fmt.Println(fname + " (in use)")
+			data, err := os.ReadFile(filepath.Clean(filepath.Join(installationDir, dirname, "version")))
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			if strings.Contains(versionInUse, string(data)) {
+				fmt.Println(dirname + " (in use)")
 			} else {
-				fmt.Println(fname)
+				fmt.Println(dirname)
 			}
 
 			installed++

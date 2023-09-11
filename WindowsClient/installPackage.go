@@ -49,8 +49,16 @@ func UseVersion(version string) (*pythonVersion.PythonVersion, error) {
 }
 
 func UseAlias(appRoot string, version *pythonVersion.PythonVersion, alias string) string {
-	if stat, err := os.Stat(PythonRootContainer); err != nil || !stat.IsDir() {
-		os.MkdirAll(PythonRootContainer, os.FileMode(os.O_RDWR))
+	installRoot := filepath.Join(appRoot, PythonRootContainer)
+
+	if strings.ContainsRune(alias, ' ') {
+		s1 := "Alias cannot contain whitespaces. use '-' instead."
+		s2 := fmt.Sprintf("Example: pvm install 3.11.0 \"%s\"", strings.ReplaceAll(alias, " ", "-"))
+		log.Fatalf("%s\n%s", s1, s2)
+	}
+
+	if stat, err := os.Stat(installRoot); err != nil || !stat.IsDir() {
+		os.MkdirAll(installRoot, os.FileMode(os.O_RDWR))
 	}
 
 	if alias != "" {
@@ -61,14 +69,17 @@ func UseAlias(appRoot string, version *pythonVersion.PythonVersion, alias string
 }
 
 func (client *Client) InstallNewVersion(version *pythonVersion.PythonVersion, alias string) {
-	// client.fetchAllAvailableVersions()
-
 	installPath := UseAlias(client.AppRoot, version, alias)
 	installerFp := path.Join(client.AppRoot, version.InstallerFilename)
 
 	stat, err := os.Stat(installPath)
 	if err == nil && stat.IsDir() {
-		fmt.Printf("Python %s is already installed. Please use the command \"reinstall\" instead.\n", version.VersionNumber)
+		if alias == "" {
+			fmt.Printf("Python %s is already installed. Please use the command \"reinstall\" instead.\n", version.VersionNumber)
+		} else {
+			fmt.Printf("Python installation \"%s\" (aliased as \"%s\") is already installed. Please use the command \"reinstall\" instead.\n", version.VersionNumber, alias)
+		}
+		return
 	}
 
 	fmt.Printf(`Downloading "%s"... `, version.InstallerFilename)

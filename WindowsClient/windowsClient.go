@@ -69,11 +69,11 @@ func (client *Client) clientInfo() string {
 	return fmt.Sprintf("Windows client (%s)", client.Arch)
 }
 
-func (client *Client) MakeSymlink(version string, srcPath string) bool {
+func (client *Client) MakeSymlink(slug string, srcPath string) bool {
 	fileInfo, err := os.Stat(srcPath)
 
 	if err != nil && !fileInfo.IsDir() {
-		log.Fatalf(`Python %s is not installed. Try installing it first...`, version)
+		log.Fatalf(`Python installation "%s" hasn't been found. Try installing it first...`, slug)
 		return false
 	}
 
