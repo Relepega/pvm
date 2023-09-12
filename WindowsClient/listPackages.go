@@ -82,16 +82,25 @@ func (client *Client) ListAll() {
 func (client *Client) ListInstalled() {
 	var installed int
 
-	installationDir := filepath.Join(client.AppRoot, PythonRootContainer)
-	versionInUse := appUtils.GetPythonVersionInUse()
+	versionInUse, err := appUtils.GetPythonVersionInUse()
 
-	entries, err := os.ReadDir(installationDir)
+	if err != nil {
+		fmt.Println("No active python installation(s) found.")
+		os.Exit(0)
+	}
+
+	entries, err := os.ReadDir(client.InstallDir)
+
+	if err != nil {
+		fmt.Println("No installation(s) found.")
+		os.Exit(0)
+	}
 
 	for _, entry := range entries {
 		if entry.IsDir() {
 			dirname := entry.Name()
 
-			data, err := os.ReadFile(filepath.Clean(filepath.Join(installationDir, dirname, "version")))
+			data, err := os.ReadFile(filepath.Clean(filepath.Join(client.InstallDir, dirname, "version")))
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -106,7 +115,7 @@ func (client *Client) ListInstalled() {
 		}
 	}
 
-	if err != nil || installed == 0 {
-		fmt.Println("No installed version found.")
+	if installed == 0 {
+		fmt.Println("No installation found.")
 	}
 }

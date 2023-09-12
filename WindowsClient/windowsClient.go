@@ -3,6 +3,7 @@ package windowsClient
 import (
 	appUtils "AppUtils"
 	pythonVersion "PythonVersion"
+	"path/filepath"
 
 	"fmt"
 	"log"
@@ -14,7 +15,7 @@ import (
 )
 
 const SymlinkDest = "%localappdata%\\Python"
-const PythonRootContainer = "Python"
+const PythonInstallDirname = "Python"
 
 type PythonVersions struct {
 	All          []string
@@ -26,6 +27,7 @@ type PythonVersions struct {
 
 type Client struct {
 	AppRoot          string
+	InstallDir       string
 	Arch             string
 	HttpClient       http.Client
 	PythonVersions   PythonVersions
@@ -34,7 +36,7 @@ type Client struct {
 }
 
 func NewClient() *Client {
-	appRoot := appUtils.GetWorkingDir()
+	appRoot := filepath.Clean(appUtils.GetWorkingDir())
 
 	arch := "amd64"
 
@@ -51,6 +53,7 @@ func NewClient() *Client {
 
 	return &Client{
 		AppRoot:    appRoot,
+		InstallDir: filepath.Join(appRoot, PythonInstallDirname),
 		Arch:       arch,
 		HttpClient: httpClient,
 		PythonVersions: PythonVersions{

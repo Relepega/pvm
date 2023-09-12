@@ -2,7 +2,7 @@
 
 Python Version Manager (PVM for short) is a project that has been inspired by [nvm for windows](https://github.com/coreybutler/nvm-windows) and aims to easily manage multiple python enviroments on your windows system.
 
-![](media/pvm.png)
+![pvm screenshot](media/pvm.png)
 
 # Table of contents
 
@@ -14,6 +14,8 @@ Python Version Manager (PVM for short) is a project that has been inspired by [n
 - [Developing](#developing)
 	- [Get started](#get-started)
 - [FAQ](#faq)
+		- [Why reinvent the wheel when pyenv-win exists and does the same thing?](#why-reinvent-the-wheel-when-pyenv-win-exists-and-does-the-same-thing)
+		- [What do I have to do if I encounter this error? `Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Manage App Execution Aliases.`](#what-do-i-have-to-do-if-i-encounter-this-error-python-was-not-found-run-without-arguments-to-install-from-the-microsoft-store-or-disable-this-shortcut-from-settings--manage-app-execution-aliases)
 
 # How to use
 
@@ -29,7 +31,8 @@ At the moment it is available only as a portable version and the installation pr
 4. Wait until you don't see any flying terminal and then close the folder.
 5. Restart your terminal.
 6. Type `pvm -h` and press enter. If the installation was successful then you will see an output like in [this image](#python-version-manager).
-7. Profit 🎉!
+7. On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn off all the entries that have `python` or `python.exe`. Like in the photo. Profit!
+8. Profit 🎉!
 
 Please keep in mind that you must install the app for each user you want to use it with. 
 
@@ -66,21 +69,22 @@ Any type of contribution is well accepted, just create a PR and i'll review it a
 
 `$ cd pvm`
 
-4. Export the `GO111MODULE` Enviroment Variable to ensure all modules to be installed correctly
+4. Install the dependencies
 
-- On Linux/MacOS: `$ export GO111MODULE=on`
-- On Windows: `> set GO111MODULE=on`
+`$ GO111MODULE=on go mod download`
 
-5. Install the dependencies
-
-`$ go mod download`
-
-6. You're now ready to go! If you want to build from source because you don't trust some random guy on the internet, run the build script:
+5. You're now ready to go! If you want to build from source because you don't trust some random guy on the internet, run the build script:
 
 `build.bat`
 
 # FAQ
 
-Q: Why reinvent the wheel when [pyenv-win](https://github.com/pyenv-win/pyenv-win) exists and does the same thing?
+### Why reinvent the wheel when [pyenv-win](https://github.com/pyenv-win/pyenv-win) exists and does the same thing?
 
-A: Forgive my ignorance, but i didn't know of its existence until the creation of this project.
+Forgive my ignorance, but i didn't know of its existence until the creation of this project.
+
+### What do I have to do if I encounter this error? `Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Manage App Execution Aliases.`
+
+On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn off all the entries that have `python` or `python.exe`. Like in the photo. Profit!
+
+![remove execution aliases w11](media/w11-app-aliases.png)

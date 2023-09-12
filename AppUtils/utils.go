@@ -95,19 +95,18 @@ func FetchJson(url string, httpClient http.Client) []byte {
 	return body
 }
 
-func GetPythonVersionInUse() string {
+func GetPythonVersionInUse() (string, error) {
 	cmd := exec.Command("python", "-V")
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		log.Fatalln(err)
-		return ""
+		return "", err
 	}
 
 	output := strings.TrimSpace(string(out))
 	res := strings.Split(output, " ")[1]
 
-	return res
+	return res, nil
 }
 
 func DownloadFile(url string, filepath string) error {

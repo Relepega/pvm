@@ -14,13 +14,13 @@ func Uninstall(folderName string) {
 
 	if strings.ToLower(folderName) == "all" {
 		fmt.Println("Uninstalling all installations... ")
-		os.RemoveAll(windowsClient.PythonRootContainer)
+		os.RemoveAll(windowsClient.PythonInstallDirname)
 		fmt.Println("Done!")
 		return
 	}
 
 	client := windowsClient.NewClient()
-	installationFolderPath := filepath.Clean(filepath.Join(client.AppRoot, windowsClient.PythonRootContainer, folderName))
+	installationFolderPath := filepath.Join(client.InstallDir, folderName)
 
 	stat, err := os.Stat(installationFolderPath)
 

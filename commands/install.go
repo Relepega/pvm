@@ -17,10 +17,13 @@ func Install(version string, alias string) {
 		log.Fatalln(err)
 	}
 
-	if utils.IsValidFolderName(alias) {
-		client.InstallNewVersion(ver, alias)
-	} else {
+	name := alias
+
+	if alias == "" {
+		name = ver.VersionNumber
+	} else if !utils.IsValidFolderName(alias) {
 		fmt.Println("Invalid alias or alias too short (minimum required lenght is 3 characters). Using no alias as fallback...")
-		client.InstallNewVersion(ver, "")
 	}
+
+	client.InstallNewVersion(ver, name)
 }

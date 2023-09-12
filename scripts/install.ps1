@@ -14,7 +14,4 @@ $pvm_home = Split-Path $PSScriptRoot -Parent
 
 [Environment]::SetEnvironmentVariable("PATH", $Env:PATH + ";$pvm_home\;$target\;$target\Scripts\;", [EnvironmentVariableTarget]::Machine) # User
 
-Remove-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python.exe
-Remove-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe
-
 # Read-Host -Prompt "Press any key to continue..."

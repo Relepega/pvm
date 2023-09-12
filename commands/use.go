@@ -13,7 +13,7 @@ import (
  */
 func Use(slug string) {
 	client := windowsClient.NewClient()
-	installationPath, _ := filepath.Abs(path.Join(client.AppRoot, windowsClient.PythonRootContainer, slug))
+	installationPath, _ := filepath.Abs(path.Join(client.AppRoot, windowsClient.PythonInstallDirname, slug))
 	stat, err := os.Stat(installationPath)
 
 	if err != nil || !stat.IsDir() {

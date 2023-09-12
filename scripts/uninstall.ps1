@@ -32,7 +32,4 @@ foreach($target in $targets){
 # Save updated path to Machine scope
 [System.Environment]::SetEnvironmentVariable("Path", $Environment, "Machine")
 
-New-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python.exe
-New-Item $env:LOCALAPPDATA\Microsoft\WindowsApps\python3.exe
-
 # Read-Host -Prompt "Press any key to continue..."

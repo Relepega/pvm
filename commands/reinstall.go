@@ -11,14 +11,14 @@ import (
 
 func Reinstall(folderName string) {
 	client := windowsClient.NewClient()
-	installationFolderPath := filepath.Clean(path.Join(client.AppRoot, windowsClient.PythonRootContainer, folderName))
+	installationFolderPath := path.Join(client.InstallDir, folderName)
 
 	stat, err := os.Stat(installationFolderPath)
 	if err != nil || !stat.IsDir() {
 		log.Fatalf("No installation named \"%s\" found", folderName)
 	}
 
-	data, err := os.ReadFile(filepath.Clean(filepath.Join(installationFolderPath, "version")))
+	data, err := os.ReadFile(filepath.Join(installationFolderPath, "version"))
 	if err != nil {
 		log.Fatalln(err)
 	}

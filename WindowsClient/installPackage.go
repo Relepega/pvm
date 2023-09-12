@@ -24,8 +24,7 @@ func UseVersion(version string) (*pythonVersion.PythonVersion, error) {
 	found := false
 
 	if ver == "latest" {
-		length := len(client.PythonVersions.Stable)
-		versionNumber := client.PythonVersions.Stable[length-1]
+		versionNumber := client.PythonVersions.Stable[0]
 		pv = *client.PythonVersions.Classes[versionNumber]
 		found = true
 	} else {
@@ -48,28 +47,26 @@ func UseVersion(version string) (*pythonVersion.PythonVersion, error) {
 
 }
 
-func UseAlias(appRoot string, version *pythonVersion.PythonVersion, alias string) string {
-	installRoot := filepath.Join(appRoot, PythonRootContainer)
-
+func UseAlias(installDir string, version *pythonVersion.PythonVersion, alias string) string {
 	if strings.ContainsRune(alias, ' ') {
 		s1 := "Alias cannot contain whitespaces. use '-' instead."
 		s2 := fmt.Sprintf("Example: pvm install 3.11.0 \"%s\"", strings.ReplaceAll(alias, " ", "-"))
 		log.Fatalf("%s\n%s", s1, s2)
 	}
 
-	if stat, err := os.Stat(installRoot); err != nil || !stat.IsDir() {
-		os.MkdirAll(installRoot, os.FileMode(os.O_RDWR))
+	if stat, err := os.Stat(installDir); err != nil || !stat.IsDir() {
+		os.MkdirAll(installDir, os.FileMode(os.O_RDWR))
 	}
 
 	if alias != "" {
-		return path.Join(appRoot, PythonRootContainer, alias)
+		return path.Join(installDir, alias)
 	}
 
-	return path.Join(appRoot, PythonRootContainer, version.VersionNumber)
+	return path.Join(installDir, version.VersionNumber)
 }
 
 func (client *Client) InstallNewVersion(version *pythonVersion.PythonVersion, alias string) {
-	installPath := UseAlias(client.AppRoot, version, alias)
+	installPath := UseAlias(client.InstallDir, version, alias)
 	installerFp := path.Join(client.AppRoot, version.InstallerFilename)
 
 	stat, err := os.Stat(installPath)
