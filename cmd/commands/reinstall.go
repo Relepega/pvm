@@ -1,7 +1,7 @@
 package commands
 
 import (
-	windowsClient "WindowsClient"
+	"WindowsClient"
 
 	"log"
 	"os"
@@ -10,7 +10,7 @@ import (
 )
 
 func Reinstall(folderName string) {
-	client := windowsClient.NewClient()
+	client := WindowsClient.NewClient()
 	installationFolderPath := path.Join(client.InstallDir, folderName)
 
 	stat, err := os.Stat(installationFolderPath)
@@ -23,7 +23,7 @@ func Reinstall(folderName string) {
 		log.Fatalln(err)
 	}
 
-	ver, err := windowsClient.UseVersion(string(data))
+	ver, err := WindowsClient.UseVersion(string(data))
 
 	if err != nil {
 		log.Fatalln(err)

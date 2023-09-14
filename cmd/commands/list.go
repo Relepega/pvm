@@ -1,13 +1,13 @@
 package commands
 
 import (
-	windowsClient "WindowsClient"
+	"WindowsClient"
 
 	"fmt"
 )
 
 func List(mode string) {
-	client := windowsClient.NewClient()
+	client := WindowsClient.NewClient()
 
 	switch mode {
 	case "all":

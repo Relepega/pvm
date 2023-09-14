@@ -1,8 +1,8 @@
-package windowsClient
+package WindowsClient
 
 import (
-	utils "AppUtils"
-	pythonVersion "PythonVersion"
+	"AppUtils"
+	"PythonVersion"
 
 	"fmt"
 	"log"
@@ -12,14 +12,14 @@ import (
 	"strings"
 )
 
-func UseVersion(version string) (*pythonVersion.PythonVersion, error) {
+func UseVersion(version string) (*PythonVersion.PythonVersion, error) {
 	client := NewClient()
 
 	client.fetchAllAvailableVersions()
 
 	ver := strings.ToLower(version)
 
-	var pv pythonVersion.PythonVersion
+	var pv PythonVersion.PythonVersion
 
 	found := false
 
@@ -47,7 +47,7 @@ func UseVersion(version string) (*pythonVersion.PythonVersion, error) {
 
 }
 
-func UseAlias(installDir string, version *pythonVersion.PythonVersion, alias string) string {
+func UseAlias(installDir string, version *PythonVersion.PythonVersion, alias string) string {
 	if strings.ContainsRune(alias, ' ') {
 		s1 := "Alias cannot contain whitespaces. use '-' instead."
 		s2 := fmt.Sprintf("Example: pvm install 3.11.0 \"%s\"", strings.ReplaceAll(alias, " ", "-"))
@@ -65,7 +65,7 @@ func UseAlias(installDir string, version *pythonVersion.PythonVersion, alias str
 	return path.Join(installDir, version.VersionNumber)
 }
 
-func (client *Client) InstallNewVersion(version *pythonVersion.PythonVersion, alias string) {
+func (client *Client) InstallNewVersion(version *PythonVersion.PythonVersion, alias string) {
 	installPath := UseAlias(client.InstallDir, version, alias)
 	installerFp := path.Join(client.AppRoot, version.InstallerFilename)
 
@@ -81,9 +81,9 @@ func (client *Client) InstallNewVersion(version *pythonVersion.PythonVersion, al
 
 	fmt.Printf(`Downloading "%s"... `, version.InstallerFilename)
 
-	err = utils.DownloadFile(version.DownloadUrl, installerFp)
+	err = AppUtils.DownloadFile(version.DownloadUrl, installerFp)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	fmt.Println("Done!")
@@ -100,7 +100,7 @@ func (client *Client) InstallNewVersion(version *pythonVersion.PythonVersion, al
 	}
 
 	if pythonPath == "" {
-		log.Fatalln("Python version not installed correctly, try again...")
+		log.Fatalf("Python version not installed correctly, try again...")
 	}
 
 	// create "version" file to not mismatch the version with the parent folder name
@@ -118,7 +118,7 @@ func (client *Client) InstallNewVersion(version *pythonVersion.PythonVersion, al
 
 	err = os.Remove(installerFp)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	fmt.Println("Done!")
@@ -128,26 +128,26 @@ func (client *Client) InstallNewVersion(version *pythonVersion.PythonVersion, al
 	fmt.Printf("Python %s installed successfully!\n", version.VersionNumber)
 }
 
-func (client *Client) python3Install(version *pythonVersion.PythonVersion, installPath string, installerFp string) string {
+func (client *Client) python3Install(version *PythonVersion.PythonVersion, installPath string, installerFp string) string {
 	pipInstallationScriptFilepath := filepath.Join(installPath, "Tools", version.PipVersion.Filename)
 	pythonVersionBasename := fmt.Sprintf("python%d%d", version.VersionInfo.Major(), version.VersionInfo.Minor())
 
 	// fmt.Print("Sorting files and fixing bugs... ")
 
-	utils.UnzipFile(installerFp, installPath)
+	AppUtils.UnzipFile(installerFp, installPath)
 
 	// zip all 'Lib' content apart 'site-packages' to 'pythonXXX.zip'
 	dirToZip := filepath.Join(installPath, "Lib")
 	ouputFilePath := filepath.Join(installPath, pythonVersionBasename+".zip")
 	excludedFiles := []string{"site-packages"}
-	utils.ZipDirWithExclusions(dirToZip+"\\", ouputFilePath, excludedFiles)
+	AppUtils.ZipDirWithExclusions(dirToZip+"\\", ouputFilePath, excludedFiles)
 
 	// remove all directories from 'Lib' apart 'site-packages'
 	libDir := filepath.Join(installPath, "Lib")
 	files, err := os.ReadDir(libDir)
 	if err != nil {
 		fmt.Println(" ")
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	for _, f := range files {
@@ -165,7 +165,7 @@ func (client *Client) python3Install(version *pythonVersion.PythonVersion, insta
 
 	if err != nil {
 		fmt.Println(" ")
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 	defer f.Close()
 
@@ -176,7 +176,7 @@ func (client *Client) python3Install(version *pythonVersion.PythonVersion, insta
 	files, err = os.ReadDir(dllsDir)
 	if err != nil {
 		fmt.Println(" ")
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	for _, f := range files {
@@ -194,13 +194,13 @@ func (client *Client) python3Install(version *pythonVersion.PythonVersion, insta
 
 	if err != nil {
 		fmt.Printf("Downloading \"get-pip.py\" from \"%s\" ...\n", version.PipVersion.DownloadUrl)
-		utils.DownloadFile(version.PipVersion.DownloadUrl, pipInstallationScriptFilepath)
+		AppUtils.DownloadFile(version.PipVersion.DownloadUrl, pipInstallationScriptFilepath)
 	}
 
 	// enable pip functionality and fixing the issue https://github.com/pypa/pip/issues/5292
 	fmt.Println("Installing \"pip\" package... ")
 
-	fmt.Print(utils.CmdColors["Orange"])
+	fmt.Print(AppUtils.CmdColors["Orange"])
 
 	pythonExe := filepath.Join(installPath, "python.exe")
 	fmt.Println("Python.exe path: " + pythonExe)
@@ -217,13 +217,13 @@ func (client *Client) python3Install(version *pythonVersion.PythonVersion, insta
 
 	command += fmt.Sprintf(` && %s -m pip install --upgrade pip`, pythonExe)
 
-	_, err = utils.RunCmd(command)
+	_, err = AppUtils.RunCmd(command)
 
-	fmt.Print(utils.CmdColors["Reset"])
+	fmt.Print(AppUtils.CmdColors["Reset"])
 
 	if err != nil {
 		fmt.Println(" ")
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	fmt.Println("Done!")
@@ -233,20 +233,20 @@ func (client *Client) python3Install(version *pythonVersion.PythonVersion, insta
 	return returnValue
 }
 
-func (client *Client) python2Install(version *pythonVersion.PythonVersion, installPath string, installerFp string) string {
+func (client *Client) python2Install(version *PythonVersion.PythonVersion, installPath string, installerFp string) string {
 	fmt.Print("Unpacking installer data... ")
 
 	absinstallerFp, _ := filepath.Abs(installerFp)
 	absinstallPath, _ := filepath.Abs(installPath)
 
 	command := fmt.Sprintf(`msiexec /n /a %s /qn TARGETDIR=%s`, absinstallerFp, absinstallPath)
-	_, err := utils.RunCmd(command)
+	_, err := AppUtils.RunCmd(command)
 
 	if err != nil {
 		fmt.Println(" ")
-		log.Fatal(err)
+		log.Fatalln(err)
 		// fmt.Println("command: " + command)
-		log.Fatal("Couldn't unpack the requested data. Aborting...")
+		log.Fatalln("Couldn't unpack the requested data. Aborting...")
 	}
 
 	fmt.Println("Done!")
@@ -281,13 +281,13 @@ func (client *Client) python2Install(version *pythonVersion.PythonVersion, insta
 
 	pythonExe, _ := filepath.Abs(path.Join(installPath, "python.exe"))
 	command = fmt.Sprintf(`%s -m ensurepip --default-pip && %s -m pip install --upgrade pip`, pythonExe, pythonExe)
-	// _, err = utils.RunCmd(command)
-	_, _ = utils.RunCmd(command)
+	// _, err = AppUtils.RunCmd(command)
+	_, _ = AppUtils.RunCmd(command)
 
-	fmt.Print(utils.CmdColors["Reset"])
+	fmt.Print(AppUtils.CmdColors["Reset"])
 	// if err != nil {
 	// 	fmt.Println(" ")
-	// 	log.Fatal(err)
+	// 	log.Fatalln(err)
 	// }
 
 	fmt.Println("Done!")

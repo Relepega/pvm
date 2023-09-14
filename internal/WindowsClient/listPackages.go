@@ -1,8 +1,8 @@
-package windowsClient
+package WindowsClient
 
 import (
-	appUtils "AppUtils"
-	pythonVersion "PythonVersion"
+	"AppUtils"
+	"PythonVersion"
 
 	"fmt"
 	"log"
@@ -19,7 +19,7 @@ func (client *Client) ListLatest() {
 	fmt.Println("(first 5 for each major version)")
 	fmt.Println(" ")
 
-	stableVersions := make([]pythonVersion.PythonVersion, 0)
+	stableVersions := make([]PythonVersion.PythonVersion, 0)
 	for _, version := range client.PythonVersions.Classes {
 		if version.IsStable {
 			stableVersions = append(stableVersions, *version)
@@ -32,8 +32,8 @@ func (client *Client) ListLatest() {
 	})
 
 	// Only latest 5 releases for each major version will be printed
-	python3 := make([]pythonVersion.PythonVersion, 0)
-	python2 := make([]pythonVersion.PythonVersion, 0)
+	python3 := make([]PythonVersion.PythonVersion, 0)
+	python2 := make([]PythonVersion.PythonVersion, 0)
 
 	for _, version := range stableVersions {
 		if version.VersionInfo.Major() == 3 {
@@ -82,7 +82,7 @@ func (client *Client) ListAll() {
 func (client *Client) ListInstalled() {
 	var installed int
 
-	versionInUse, err := appUtils.GetPythonVersionInUse()
+	versionInUse, err := AppUtils.GetPythonVersionInUse()
 
 	if err != nil {
 		fmt.Println("No active python installation(s) found.")

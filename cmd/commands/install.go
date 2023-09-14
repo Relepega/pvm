@@ -1,17 +1,24 @@
 package commands
 
 import (
-	utils "AppUtils"
-	windowsClient "WindowsClient"
-	"fmt"
+	"AppUtils"
+	"PvmState"
+	"WindowsClient"
 
+	"fmt"
 	"log"
+	"strings"
 )
 
 func Install(version string, alias string) {
-	client := windowsClient.NewClient()
+	if strings.ToLower(version) == "pvm" {
+		PvmState.Install()
+		return
+	}
 
-	ver, err := windowsClient.UseVersion(version)
+	client := WindowsClient.NewClient()
+
+	ver, err := WindowsClient.UseVersion(version)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -21,7 +28,7 @@ func Install(version string, alias string) {
 
 	if alias == "" {
 		name = ver.VersionNumber
-	} else if !utils.IsValidFolderName(alias) {
+	} else if !AppUtils.IsValidFolderName(alias) {
 		fmt.Println("Invalid alias or alias too short (minimum required lenght is 3 characters). Using no alias as fallback...")
 	}
 

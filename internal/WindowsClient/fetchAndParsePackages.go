@@ -1,8 +1,8 @@
-package windowsClient
+package WindowsClient
 
 import (
-	utils "AppUtils"
-	pythonVersion "PythonVersion"
+	"AppUtils"
+	"PythonVersion"
 
 	"encoding/json"
 	"fmt"
@@ -18,7 +18,7 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
-func (client *Client) parsePythonPackages(items []pythonVersion.PackagesCatalog) {
+func (client *Client) parsePythonPackages(items []PythonVersion.PackagesCatalog) {
 	for _, version := range items {
 		versionNumber := version.PackageEntry.Version
 		packageContent := version.PackageEntry.PackageContent
@@ -63,7 +63,7 @@ func (client *Client) parsePythonPackages(items []pythonVersion.PackagesCatalog)
 
 		y, m, d := releaseDate.Date()
 
-		client.PythonVersions.Classes[versionNumber] = pythonVersion.NewPythonVersion(
+		client.PythonVersions.Classes[versionNumber] = PythonVersion.NewPythonVersion(
 			versionNumber,
 			fmt.Sprintf("%d/%d/%d", m, d, y),
 			releaseDate.Unix(),
@@ -82,18 +82,18 @@ func (client *Client) fetchAllAvailableVersions() {
 
 	if f, err := os.Stat(cacheFile); err == nil {
 		if f.IsDir() {
-			log.Fatalf("Cache file can't be a directory.")
+			log.Fatalln("Cache file can't be a directory.")
 		}
 
 		data, err := os.ReadFile(cacheFile)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln(err)
 		}
 
 		var cacheData PythonVersions
 		err = msgpack.Unmarshal(data, &cacheData)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln(err)
 		}
 
 		var expiry int64 = 2 * 60 * 60 * 1000 // 2 hours
@@ -115,33 +115,33 @@ func (client *Client) fetchAllAvailableVersions() {
 			defer wg.Done()
 
 			url := fmt.Sprintf("https://api.nuget.org/v3/registration5-semver1/%s/index.json", packageID)
-			body := utils.FetchJson(url, client.HttpClient)
+			body := AppUtils.FetchJson(url, client.HttpClient)
 
 			if strings.Contains(packageID, "python2") {
-				var data pythonVersion.Python2ApiSchema
+				var data PythonVersion.Python2ApiSchema
 
 				err := json.Unmarshal(body, &data)
 				if err != nil {
-					log.Fatal(err)
+					log.Fatalln(err)
 				}
 
 				catalogs := data.Items
 				client.parsePythonPackages(catalogs[0].Items)
 			} else {
-				var data pythonVersion.Python3ApiSchema
+				var data PythonVersion.Python3ApiSchema
 				err := json.Unmarshal(body, &data)
 				if err != nil {
-					log.Fatal(err)
+					log.Fatalln(err)
 				}
 
 				for _, item := range data.Items {
-					paginationContainer := utils.FetchJson(item.ID, client.HttpClient)
+					paginationContainer := AppUtils.FetchJson(item.ID, client.HttpClient)
 
 					// var paginationElements map[string]interface{}
-					var paginationElements pythonVersion.Python2CatalogItem
+					var paginationElements PythonVersion.Python2CatalogItem
 					err := json.Unmarshal(paginationContainer, &paginationElements)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatalln(err)
 					}
 
 					client.parsePythonPackages(paginationElements.Items)

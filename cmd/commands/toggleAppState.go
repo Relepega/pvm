@@ -1,7 +1,7 @@
 package commands
 
 import (
-	windowsClient "WindowsClient"
+	"WindowsClient"
 
 	"fmt"
 	"log"
@@ -11,14 +11,14 @@ import (
 )
 
 func ToggleAppState(mode string) {
-	absSymlinkPath := strings.ReplaceAll(windowsClient.SymlinkDest, "%localappdata%", os.Getenv("localappdata"))
+	absSymlinkPath := strings.ReplaceAll(WindowsClient.SymlinkDest, "%localappdata%", os.Getenv("localappdata"))
 
 	// fetch MACHINE-scope PATH enviroment variable and split it
 	cmd := exec.Command("powershell.exe", "-Command", `[System.Environment]::GetEnvironmentVariable("Path", "Machine")`)
 
 	out, err := cmd.Output()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	pathElements := strings.Split(string(out), ";")
@@ -95,7 +95,7 @@ func ToggleAppState(mode string) {
 	psCmd = `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine; ` + file.Name() + `; Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope LocalMachine`
 	cmd = exec.Command("powershell.exe", "-noprofile", "Start-Process", "-WindowStyle", "hidden", "-Verb", "RunAs", "-Wait", "powershell.exe", `-Args "`+psCmd+`"`)
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	fmt.Println(message)

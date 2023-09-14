@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -35,6 +36,25 @@ func RunCmd(command string) (cmd *exec.Cmd, err error) {
 	}
 
 	return cmd, nil
+}
+
+func IsAppRunningAsAdmin() (bool, error) {
+	currentUser, err := user.Current()
+	if err != nil {
+		return false, err
+		// panic(err)
+	}
+
+	if runtime.GOOS != "windows" {
+		return false, fmt.Errorf("not on Windows")
+	}
+
+	// On Windows the admin UID starts with S-1-5-21
+	if strings.HasPrefix(currentUser.Uid, "S-1-5-21") {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
 
 func getModuleFileName(hModule windows.Handle) (string, error) {
@@ -83,13 +103,13 @@ func IsValidFolderName(input string) bool {
 func FetchJson(url string, httpClient http.Client) []byte {
 	res, err := httpClient.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	return body

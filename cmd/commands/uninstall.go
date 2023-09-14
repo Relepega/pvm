@@ -1,12 +1,12 @@
 package commands
 
 import (
-	windowsClient "WindowsClient"
+	"WindowsClient"
+
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
-
-	"os"
 )
 
 func Uninstall(folderName string) {
@@ -14,12 +14,12 @@ func Uninstall(folderName string) {
 
 	if strings.ToLower(folderName) == "all" {
 		fmt.Println("Uninstalling all installations... ")
-		os.RemoveAll(windowsClient.PythonInstallDirname)
+		os.RemoveAll(WindowsClient.PythonInstallDirname)
 		fmt.Println("Done!")
 		return
 	}
 
-	client := windowsClient.NewClient()
+	client := WindowsClient.NewClient()
 	installationFolderPath := filepath.Join(client.InstallDir, folderName)
 
 	stat, err := os.Stat(installationFolderPath)

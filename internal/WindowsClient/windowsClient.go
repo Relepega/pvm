@@ -1,8 +1,8 @@
-package windowsClient
+package WindowsClient
 
 import (
-	appUtils "AppUtils"
-	pythonVersion "PythonVersion"
+	"AppUtils"
+	"PythonVersion"
 	"path/filepath"
 
 	"fmt"
@@ -21,7 +21,7 @@ type PythonVersions struct {
 	All          []string
 	Stable       []string
 	Unstable     []string
-	Classes      map[string]*pythonVersion.PythonVersion
+	Classes      map[string]*PythonVersion.PythonVersion
 	CreationDate int64
 }
 
@@ -36,7 +36,7 @@ type Client struct {
 }
 
 func NewClient() *Client {
-	appRoot := filepath.Clean(appUtils.GetWorkingDir())
+	appRoot := filepath.Clean(AppUtils.GetWorkingDir())
 
 	arch := "amd64"
 
@@ -60,7 +60,7 @@ func NewClient() *Client {
 			All:          []string{},
 			Stable:       []string{},
 			Unstable:     []string{},
-			Classes:      make(map[string]*pythonVersion.PythonVersion),
+			Classes:      make(map[string]*PythonVersion.PythonVersion),
 			CreationDate: 0,
 		},
 		CachedDataExists: false,
@@ -86,11 +86,11 @@ func (client *Client) MakeSymlink(slug string, srcPath string) bool {
 
 	fmt.Print("Making symlink... ")
 
-	_, err = appUtils.RunCmd(strings.Join(command, " "))
+	_, err = AppUtils.RunCmd(strings.Join(command, " "))
 
 	if err != nil {
 		print("Couldn't create the symlink, exiting ...")
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	fmt.Println("Done!")

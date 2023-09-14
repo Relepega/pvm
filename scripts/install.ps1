@@ -5,7 +5,7 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
         $Command = "-File `"" + $MyInvocation.MyCommand.Path + "`" " + $MyInvocation.UnboundArguments
         Start-Process -FilePath PowerShell.exe -Verb RunAs -ArgumentList $Command
         Exit
- }
+    }
 }
 
 $localappdata = [Environment]::GetEnvironmentVariable('localappdata')

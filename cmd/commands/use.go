@@ -1,7 +1,8 @@
 package commands
 
 import (
-	windowsClient "WindowsClient"
+	"WindowsClient"
+
 	"log"
 	"os"
 	"path"
@@ -12,8 +13,8 @@ import (
  * @param {slug} either the version or the alias
  */
 func Use(slug string) {
-	client := windowsClient.NewClient()
-	installationPath, _ := filepath.Abs(path.Join(client.AppRoot, windowsClient.PythonInstallDirname, slug))
+	client := WindowsClient.NewClient()
+	installationPath, _ := filepath.Abs(path.Join(client.AppRoot, WindowsClient.PythonInstallDirname, slug))
 	stat, err := os.Stat(installationPath)
 
 	if err != nil || !stat.IsDir() {

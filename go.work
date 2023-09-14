@@ -1,9 +1,10 @@
 go 1.21.0
 
 use (
-	./cmd/main
 	./cmd/commands
+	./cmd/main
 	./internal/AppUtils
+	./internal/PvmState
 	./internal/PythonVersion
 	./internal/WindowsClient
 )
