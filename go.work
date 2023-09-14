@@ -1,9 +1,9 @@
 go 1.21.0
 
 use (
-	.
-	./commands
-	./AppUtils
-	./PythonVersion
-	./WindowsClient
+	./cmd/main
+	./cmd/commands
+	./internal/AppUtils
+	./internal/PythonVersion
+	./internal/WindowsClient
 )

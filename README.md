@@ -60,6 +60,7 @@ Any type of contribution is well accepted, just create a PR and i'll review it a
 
 - Go 1.21.0 (minimum required version)
 - Git
+- GNU Make
 
 2. When you're sure that you have installed them correctly, proceed by cloning the repository
 
@@ -71,11 +72,11 @@ Any type of contribution is well accepted, just create a PR and i'll review it a
 
 4. Install the dependencies
 
-`$ GO111MODULE=on go mod download`
+`$ GO111MODULE=on go mod get all ./...`
 
 5. You're now ready to go! If you want to build from source because you don't trust some random guy on the internet, run the build script:
 
-`build.bat`
+`make build`
 
 # FAQ
 
