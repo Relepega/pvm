@@ -30,7 +30,7 @@ At the moment it is available only as a portable version and the installation pr
 3. Open a command prompt and navigate to the folder where you extracted PVM and run the command `pvm install pvm`.
 4. Wait until you see the successful installation message and then close the terminal.
 5. Reopen the terminal, type `pvm` and press enter. If the installation was successful then you will see an output like in [this image](#python-version-manager).
-6. On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn off all the entries that have `python` or `python.exe`. Like in the [image](./media/w11-app-aliases.png). Profit!
+6. On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn off all the entries that have `python` or `python.exe`. Like in [this image](#what-do-i-have-to-do-if-i-encounter-this-error-python-was-not-found-run-without-arguments-to-install-from-the-microsoft-store-or-disable-this-shortcut-from-settings--manage-app-execution-aliases). Profit!
 7. Profit 🎉!
 
 Please keep in mind that you must install the app for each user you want to use it with.
@@ -44,7 +44,7 @@ It's basically the same process as the installation one:
 3. Wait until you see the successful uninstallation message and then close the terminal.
 4. Reopen the terminal, type `pvm -h` and press enter. If pvm was uninstalled successfully now in the terminal you should see an error.
 5. Profit 🎉!
-6. (optional) On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn on all the entries that have `python` or `python.exe`. Like in the [image](./media/w11-app-aliases.png). Profit!
+6. (optional) On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn on all the entries that have `python` or `python.exe`. Like in the [this image](#what-do-i-have-to-do-if-i-encounter-this-error-python-was-not-found-run-without-arguments-to-install-from-the-microsoft-store-or-disable-this-shortcut-from-settings--manage-app-execution-aliases). Profit!
 7. (optional) Please let me know why you decided to uninstall pvm: fill [this form](https://github.com/Relepega/PythonVersionManager/issues/new) and i'll be here to read your struggles with pvm.
 
 Please keep in mind that you must uninstall the app for each user you want to use it with.
@@ -57,9 +57,9 @@ Any type of contribution is well accepted, just create a PR and i'll review it a
 
 1. Make sure to have these tools installed on your system
 
--   Go 1.21.0 (minimum required version)
--   Git
--   GNU Make
+- Go 1.21.0 (minimum required version)
+- Git
+- GNU Make
 
 2. When you're sure that you have installed them correctly, proceed by cloning the repository
 
