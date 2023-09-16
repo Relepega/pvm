@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"PvmState"
 	"WindowsClient"
 
 	"fmt"
@@ -9,10 +10,15 @@ import (
 	"strings"
 )
 
-func Uninstall(folderName string) {
-	errorNotFound := fmt.Sprintf("No python installation named \"%s\" has been found.\nPlease install it first.", folderName)
+func Uninstall(name string) {
+	if strings.ToLower(name) == "pvm" {
+		PvmState.Uninstall()
+		return
+	}
 
-	if strings.ToLower(folderName) == "all" {
+	errorNotFound := fmt.Sprintf("No python installation named \"%s\" has been found.\nPlease install it first.", name)
+
+	if strings.ToLower(name) == "all" {
 		fmt.Println("Uninstalling all installations... ")
 		os.RemoveAll(WindowsClient.PythonInstallDirname)
 		fmt.Println("Done!")
@@ -20,7 +26,7 @@ func Uninstall(folderName string) {
 	}
 
 	client := WindowsClient.NewClient()
-	installationFolderPath := filepath.Join(client.InstallDir, folderName)
+	installationFolderPath := filepath.Join(client.InstallDir, name)
 
 	stat, err := os.Stat(installationFolderPath)
 
@@ -30,7 +36,7 @@ func Uninstall(folderName string) {
 	}
 
 	if stat.IsDir() {
-		fmt.Printf("Uninstalling \"%s\" installation... ", folderName)
+		fmt.Printf("Uninstalling \"%s\" installation... ", name)
 		os.RemoveAll(installationFolderPath)
 		fmt.Println("Done!")
 		return

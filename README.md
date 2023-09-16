@@ -27,28 +27,27 @@ At the moment it is available only as a portable version and the installation pr
 
 1. Download the latest version [from here](https://github.com/Relepega/PythonVersionManager/releases).
 2. Unzip the app where you won't move it never again until you uninstall it.
-3. Inside the app folder, go to the subfolder `scripts`, right-click on `install.bat` and then click on `Run as administrator`. If the UAC kicks in, please click on `yes`.
-4. Wait until you don't see any flying terminal and then close the folder.
-5. Restart your terminal.
-6. Type `pvm -h` and press enter. If the installation was successful then you will see an output like in [this image](#python-version-manager).
-7. On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn off all the entries that have `python` or `python.exe`. Like in the photo. Profit!
-8. Profit 🎉!
+3. Open a command prompt and navigate to the folder where you extracted PVM and run the command `pvm install pvm`.
+4. Wait until you see the successful installation message and then close the terminal.
+5. Reopen the terminal, type `pvm` and press enter. If the installation was successful then you will see an output like in [this image](#python-version-manager).
+6. On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn off all the entries that have `python` or `python.exe`. Like in the [image](./media/w11-app-aliases.png). Profit!
+7. Profit 🎉!
 
-Please keep in mind that you must install the app for each user you want to use it with. 
+Please keep in mind that you must install the app for each user you want to use it with.
 
 ## Uninstall
 
 It's basically the same process as the installation one:
 
 1. Open the app folder.
-2. Go to the `scripts` subfolder, right-click on `uninstall.bat` and then click on `Run as administrator`. If the UAC kicks in, please click on `yes`.
-3. Wait until you don't see any flying terminal and then close the folder.
-4. Restart your terminal.
-5. Type `pvm -h` and press enter. If pvm was uninstalled successfully now in the terminal you should see an error.
-6. Profit 🎉!
+2. Open a command prompt and navigate to the folder where you extracted PVM and run the command `pvm uninstall pvm`.
+3. Wait until you see the successful uninstallation message and then close the terminal.
+4. Reopen the terminal, type `pvm -h` and press enter. If pvm was uninstalled successfully now in the terminal you should see an error.
+5. Profit 🎉!
+6. (optional) On Windows 11, open the `Settings` app and navigate to: `Apps` -> `Advanced app settings` -> `App execution aliases`, then turn on all the entries that have `python` or `python.exe`. Like in the [image](./media/w11-app-aliases.png). Profit!
 7. (optional) Please let me know why you decided to uninstall pvm: fill [this form](https://github.com/Relepega/PythonVersionManager/issues/new) and i'll be here to read your struggles with pvm.
 
-Please keep in mind that you must uninstall the app for each user you want to use it with. 
+Please keep in mind that you must uninstall the app for each user you want to use it with.
 
 # Developing
 
@@ -58,9 +57,9 @@ Any type of contribution is well accepted, just create a PR and i'll review it a
 
 1. Make sure to have these tools installed on your system
 
-- Go 1.21.0 (minimum required version)
-- Git
-- GNU Make
+-   Go 1.21.0 (minimum required version)
+-   Git
+-   GNU Make
 
 2. When you're sure that you have installed them correctly, proceed by cloning the repository
 
