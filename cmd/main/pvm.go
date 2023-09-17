@@ -2,9 +2,10 @@ package main
 
 import (
 	"AppUtils"
+	"Commands"
+	"PvmState"
 	"WindowsClient"
 
-	"commands"
 	"fmt"
 	"log"
 
@@ -23,9 +24,9 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			switch len(args) {
 			case 1:
-				commands.Install(args[0], "")
+				Commands.Install(args[0], "")
 			case 2:
-				commands.Install(args[0], args[1])
+				Commands.Install(args[0], args[1])
 			default:
 				log.Fatalln("Too many parameters. If you're trying to use an alias, please wrap it in double quotes (ex: \"my-custom-alias\")")
 			}
@@ -39,7 +40,7 @@ func main() {
 		Long:    `Reinstalls the specified python version, that can either be a specific version, "all" or an alias. If not found, the program will exit`,
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			commands.Reinstall(args[0])
+			Commands.Reinstall(args[0])
 		},
 	}
 
@@ -50,7 +51,7 @@ func main() {
 		Long:    `Uninstalls the specified python version, that can either be a specific version, "all" or an alias. If not found, the program will exit`,
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			commands.Uninstall(args[0])
+			Commands.Uninstall(args[0])
 		},
 	}
 
@@ -59,7 +60,7 @@ func main() {
 		Short: "Switch to use the specified alias",
 		Long:  `Activates the specified python version. It can be either the version number or the installation alias. If not found, the program will exit`,
 		Args:  cobra.ExactArgs(1),
-		Run:   func(cmd *cobra.Command, args []string) { commands.Use(args[0]) },
+		Run:   func(cmd *cobra.Command, args []string) { Commands.Use(args[0]) },
 	}
 
 	cmdList := &cobra.Command{
@@ -68,23 +69,23 @@ func main() {
 		Short:   "Lists all the mode-specified versions",
 		Long:    `Lists all the mode-specified versions. Valid modes are "all" (lists stable and unstable versions), "installed", "latest" (lists the latest 5 releases for each major python version). If not a valid mode, the program will exit`,
 		Args:    cobra.ExactArgs(1),
-		Run:     func(cmd *cobra.Command, args []string) { commands.List(args[0]) },
+		Run:     func(cmd *cobra.Command, args []string) { Commands.List(args[0]) },
 	}
 
 	cmdOn := &cobra.Command{
 		Use:   "on",
 		Short: "Enables python version management",
 		Long:  `Enables python version management by creating a symlink`,
-		Args:  cobra.ExactArgs(1),
-		Run:   func(cmd *cobra.Command, args []string) { commands.ToggleAppState("enable") },
+		Args:  cobra.ExactArgs(0),
+		Run:   func(cmd *cobra.Command, args []string) { PvmState.Handler("enable") },
 	}
 
 	cmdOff := &cobra.Command{
 		Use:   "off",
 		Short: "Disables python version management",
 		Long:  `Disables python version management by removing the symlink`,
-		Args:  cobra.ExactArgs(1),
-		Run:   func(cmd *cobra.Command, args []string) { commands.ToggleAppState("disable") },
+		Args:  cobra.ExactArgs(0),
+		Run:   func(cmd *cobra.Command, args []string) { PvmState.Handler("disable") },
 	}
 
 	cmdVersion := &cobra.Command{

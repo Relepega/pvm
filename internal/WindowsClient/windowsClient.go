@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 )
 
@@ -80,16 +79,11 @@ func (client *Client) MakeSymlink(slug string, srcPath string) bool {
 		return false
 	}
 
-	// run command
-	symlinkCommand := fmt.Sprintf("New-Item -Force -ItemType SymbolicLink -Path '%s' -Target '%s'", SymlinkDest, srcPath)
-	command := []string{"powershell.exe", "-noprofile", `Start-Process -WindowStyle hidden -Verb RunAs -Wait powershell.exe -Args "` + symlinkCommand + `"`}
-
 	fmt.Print("Making symlink... ")
 
-	_, err = AppUtils.RunCmd(strings.Join(command, " "))
-
+	err = AppUtils.CreateSymlink(srcPath, SymlinkDest)
 	if err != nil {
-		print("Couldn't create the symlink, exiting ...")
+		print("Couldn't create the symlink, exiting...")
 		log.Fatalln(err)
 	}
 

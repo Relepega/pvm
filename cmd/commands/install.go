@@ -1,4 +1,4 @@
-package commands
+package Commands
 
 import (
 	"AppUtils"
@@ -12,7 +12,7 @@ import (
 
 func Install(version string, alias string) {
 	if strings.ToLower(version) == "pvm" {
-		PvmState.Install()
+		PvmState.Handler("install")
 		return
 	}
 

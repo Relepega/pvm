@@ -35,6 +35,13 @@ At the moment it is available only as a portable version and the installation pr
 
 Please keep in mind that you must install the app for each user you want to use it with.
 
+Here's a video tutorial:
+<p style="text-align: center;">
+	<video width="700" controls>
+	<source src="media/VSCodium_goaLeQLqOD.mp4" type="video/mp4">
+	</video>
+</p>
+
 ## Uninstall
 
 It's basically the same process as the installation one:

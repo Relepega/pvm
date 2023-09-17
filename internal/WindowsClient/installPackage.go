@@ -187,7 +187,6 @@ func (client *Client) python3Install(version *PythonVersion.PythonVersion, insta
 
 	// delete 'DLLs' directory
 	os.RemoveAll(dllsDir)
-	fmt.Println("Done!")
 
 	// download "get-pip.py" if not already downloaded
 	_, err = os.Stat(pipInstallationScriptFilepath)
@@ -204,7 +203,7 @@ func (client *Client) python3Install(version *PythonVersion.PythonVersion, insta
 
 	pythonExe := filepath.Join(installPath, "python.exe")
 	fmt.Println("Python.exe path: " + pythonExe)
-	command := fmt.Sprintf(`%s %s`, pythonExe, pipInstallationScriptFilepath)
+	command := fmt.Sprintf(`%s %s --no-warn-script-location`, pythonExe, pipInstallationScriptFilepath)
 
 	malfunctioningVersions := []string{"3.5.2", "3.5.2.1", "3.5.2.2", "3.6.0"}
 
@@ -281,7 +280,6 @@ func (client *Client) python2Install(version *PythonVersion.PythonVersion, insta
 
 	pythonExe, _ := filepath.Abs(path.Join(installPath, "python.exe"))
 	command = fmt.Sprintf(`%s -m ensurepip --default-pip && %s -m pip install --upgrade pip`, pythonExe, pythonExe)
-	// _, err = AppUtils.RunCmd(command)
 	_, _ = AppUtils.RunCmd(command)
 
 	fmt.Print(AppUtils.CmdColors["Reset"])

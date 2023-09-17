@@ -4,10 +4,7 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"log"
-	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -17,24 +14,19 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func RunCmd(command string) (cmd *exec.Cmd, err error) {
-	osShell := []string{"bash", "-c"}
-
-	if runtime.GOOS == "windows" {
-		osShell = []string{"cmd", "/C"}
+func IsValidFolderName(input string) bool {
+	if input == "" {
+		return false
 	}
 
-	cmd = exec.Command(osShell[0], osShell[1], command)
-	// cmd.Stdout = os.Stdout
-	cmd.Stdout = nil
-	cmd.Stderr = os.Stdout
-	err = cmd.Run()
-
-	if err != nil {
-		return cmd, err
+	if len(input) < 3 {
+		return false
 	}
 
-	return cmd, nil
+	pattern := `^[a-zA-Z0-9_.\s-]{1,255}$`
+	regex, _ := regexp.Compile(pattern)
+
+	return regex.MatchString(input)
 }
 
 func getModuleFileName(hModule windows.Handle) (string, error) {
@@ -63,74 +55,6 @@ func GetWorkingDir() string {
 	}
 
 	return appDir
-}
-
-func IsValidFolderName(input string) bool {
-	if input == "" {
-		return false
-	}
-
-	if len(input) < 3 {
-		return false
-	}
-
-	pattern := `^[a-zA-Z0-9_.\s-]{1,255}$`
-	regex, _ := regexp.Compile(pattern)
-
-	return regex.MatchString(input)
-}
-
-func FetchJson(url string, httpClient http.Client) []byte {
-	res, err := httpClient.Get(url)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return body
-}
-
-func GetPythonVersionInUse() (string, error) {
-	cmd := exec.Command("python", "-V")
-	out, err := cmd.CombinedOutput()
-
-	if err != nil {
-		return "", err
-	}
-
-	output := strings.TrimSpace(string(out))
-	res := strings.Split(output, " ")[1]
-
-	return res, nil
-}
-
-func DownloadFile(url string, filepath string) error {
-	// Create the file
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func UnzipFile(src string, dest string) error {

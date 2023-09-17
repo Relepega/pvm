@@ -1,4 +1,4 @@
-VERSION = 0.1.0
+VERSION = 0.1.0-b1
 
 .PHONY: build
 
@@ -8,5 +8,3 @@ build:
 	mkdir build
 	GOOS=windows GOARCH=amd64 go build -o ./build ./cmd/main/pvm.go
 	cd build && tar -a -c -f pvm-v$(VERSION).zip pvm.exe
-
-	

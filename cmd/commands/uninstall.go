@@ -1,4 +1,4 @@
-package commands
+package Commands
 
 import (
 	"PvmState"
@@ -12,7 +12,7 @@ import (
 
 func Uninstall(name string) {
 	if strings.ToLower(name) == "pvm" {
-		PvmState.Uninstall()
+		PvmState.Handler("uninstall")
 		return
 	}
 
