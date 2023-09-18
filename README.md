@@ -14,8 +14,8 @@ Python Version Manager (PVM for short) is a project that has been inspired by [n
 - [Developing](#developing)
 	- [Get started](#get-started)
 - [FAQ](#faq)
-		- [Why reinvent the wheel when pyenv-win exists and does the same thing?](#why-reinvent-the-wheel-when-pyenv-win-exists-and-does-the-same-thing)
-		- [What do I have to do if I encounter this error? `Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Manage App Execution Aliases.`](#what-do-i-have-to-do-if-i-encounter-this-error-python-was-not-found-run-without-arguments-to-install-from-the-microsoft-store-or-disable-this-shortcut-from-settings--manage-app-execution-aliases)
+	- [Why reinvent the wheel when pyenv-win exists and does the same thing?](#why-reinvent-the-wheel-when-pyenv-win-exists-and-does-the-same-thing)
+	- [What do I have to do if I encounter this error? `Python was not found; run without arguments to install from the Microsoft Store, or disable this shortcut from Settings > Manage App Execution Aliases.`](#what-do-i-have-to-do-if-i-encounter-this-error-python-was-not-found-run-without-arguments-to-install-from-the-microsoft-store-or-disable-this-shortcut-from-settings--manage-app-execution-aliases)
 
 # How to use
 
