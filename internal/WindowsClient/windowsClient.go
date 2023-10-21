@@ -3,18 +3,19 @@ package WindowsClient
 import (
 	"AppUtils"
 	"PythonVersion"
-	"path/filepath"
-
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 )
 
-const SymlinkDest = "%localappdata%\\Python"
-const PythonInstallDirname = "Python"
+const (
+	SymlinkDest          = "%localappdata%\\Python"
+	PythonInstallDirname = "Python"
+)
 
 type PythonVersions struct {
 	All          []string
@@ -22,6 +23,7 @@ type PythonVersions struct {
 	Unstable     []string
 	Classes      map[string]*PythonVersion.PythonVersion
 	CreationDate int64
+	ExpiryDate   int64
 }
 
 type Client struct {
@@ -31,7 +33,6 @@ type Client struct {
 	HttpClient       http.Client
 	PythonVersions   PythonVersions
 	CachedDataExists bool
-	ExpiryDate       int64
 }
 
 func NewClient() *Client {
@@ -61,9 +62,9 @@ func NewClient() *Client {
 			Unstable:     []string{},
 			Classes:      make(map[string]*PythonVersion.PythonVersion),
 			CreationDate: 0,
+			ExpiryDate:   0,
 		},
 		CachedDataExists: false,
-		ExpiryDate:       0,
 	}
 }
 

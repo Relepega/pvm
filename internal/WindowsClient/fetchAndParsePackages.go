@@ -22,7 +22,11 @@ func (client *Client) parsePythonPackages(items []PythonVersion.PackagesCatalog)
 	for _, version := range items {
 		versionNumber := version.PackageEntry.Version
 		packageContent := version.PackageEntry.PackageContent
-		releaseDate, _ := time.Parse(time.RFC3339, version.PackageEntry.Published)
+
+		releaseDate, err := time.Parse(time.RFC3339, version.PackageEntry.Published)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		if len(strings.Split(versionNumber, ".")) > 3 {
 			return
@@ -96,8 +100,7 @@ func (client *Client) fetchAllAvailableVersions() {
 			log.Fatalln(err)
 		}
 
-		var expiry int64 = 2 * 60 * 60 * 1000 // 2 hours
-		if client.ExpiryDate+expiry < time.Now().Unix() {
+		if cacheData.ExpiryDate >= time.Now().Unix() {
 			client.PythonVersions = cacheData
 			return
 		}
@@ -152,6 +155,7 @@ func (client *Client) fetchAllAvailableVersions() {
 	wg.Wait()
 
 	client.PythonVersions.CreationDate = time.Now().Unix()
+	client.PythonVersions.ExpiryDate = time.Now().Add(time.Hour * 2).Unix()
 
 	// create file if not exists
 	file, err := os.OpenFile(cacheFile, os.O_RDONLY|os.O_CREATE, 0666)

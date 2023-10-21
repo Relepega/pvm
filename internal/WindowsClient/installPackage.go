@@ -3,7 +3,6 @@ package WindowsClient
 import (
 	"AppUtils"
 	"PythonVersion"
-
 	"fmt"
 	"log"
 	"os"
@@ -44,7 +43,6 @@ func UseVersion(version string) (*PythonVersion.PythonVersion, error) {
 	}
 
 	return &pv, nil
-
 }
 
 func UseAlias(installDir string, version *PythonVersion.PythonVersion, alias string) string {
@@ -106,7 +104,6 @@ func (client *Client) InstallNewVersion(version *PythonVersion.PythonVersion, al
 	// create "version" file to not mismatch the version with the parent folder name
 	versionFileName := filepath.Join(pythonPath, "version")
 	f, err := os.OpenFile(versionFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeDevice)
-
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -129,7 +126,7 @@ func (client *Client) InstallNewVersion(version *PythonVersion.PythonVersion, al
 }
 
 func (client *Client) python3Install(version *PythonVersion.PythonVersion, installPath string, installerFp string) string {
-	pipInstallationScriptFilepath := filepath.Join(installPath, "Tools", version.PipVersion.Filename)
+	pipInstallationScriptFilepath := filepath.Join(installPath, version.PipVersion.Filename)
 	pythonVersionBasename := fmt.Sprintf("python%d%d", version.VersionInfo.Major(), version.VersionInfo.Minor())
 
 	// fmt.Print("Sorting files and fixing bugs... ")
@@ -162,7 +159,6 @@ func (client *Client) python3Install(version *PythonVersion.PythonVersion, insta
 	// fix site-packages (https://stackoverflow.com/a/68891090)
 	pthFileFilepath := filepath.Join(installPath, pythonVersionBasename+"._pth")
 	f, err := os.Create(pthFileFilepath)
-
 	if err != nil {
 		fmt.Println(" ")
 		log.Fatalln(err)
@@ -240,7 +236,6 @@ func (client *Client) python2Install(version *PythonVersion.PythonVersion, insta
 
 	command := fmt.Sprintf(`msiexec /n /a %s /qn TARGETDIR=%s`, absinstallerFp, absinstallPath)
 	_, err := AppUtils.RunCmd(command)
-
 	if err != nil {
 		fmt.Println(" ")
 		log.Fatalln(err)

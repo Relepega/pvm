@@ -3,7 +3,6 @@ package WindowsClient
 import (
 	"AppUtils"
 	"PythonVersion"
-
 	"fmt"
 	"log"
 	"os"
@@ -83,14 +82,12 @@ func (client *Client) ListInstalled() {
 	var installed int
 
 	versionInUse, err := AppUtils.GetPythonVersionInUse()
-
 	if err != nil {
 		fmt.Println("No active python installation(s) found.")
 		os.Exit(0)
 	}
 
 	entries, err := os.ReadDir(client.InstallDir)
-
 	if err != nil {
 		fmt.Println("No installation(s) found.")
 		os.Exit(0)
